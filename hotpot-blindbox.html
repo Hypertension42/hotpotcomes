@@ -1,0 +1,2583 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>多人联机·火锅盲盒黑暗料理</title>
+  <style>
+    :root {
+      --red: #e83f32;
+      --red-dark: #9d231c;
+      --yellow: #ffd267;
+      --cream: #fff8e7;
+      --ink: #291716;
+      --muted: #7c5a4e;
+      --line: #f1b24c;
+      --panel: rgba(255, 250, 235, 0.96);
+      --teal: #138a87;
+      --green: #3f8f43;
+      --violet: #7250b5;
+      --shadow: 0 18px 42px rgba(95, 35, 16, 0.18);
+      font-family: "Microsoft YaHei", "PingFang SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #fff2c5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 16% 12%, rgba(255, 210, 103, 0.7) 0 12%, transparent 13%),
+        radial-gradient(circle at 82% 10%, rgba(232, 63, 50, 0.22) 0 10%, transparent 11%),
+        linear-gradient(135deg, #fff4bf 0%, #ffd46f 48%, #ff8f55 100%);
+      overflow-x: hidden;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.58;
+      filter: grayscale(0.2);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      width: min(1120px, calc(100% - 28px));
+      margin: 14px auto 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border: 2px solid rgba(141, 50, 18, 0.2);
+      background: rgba(255, 250, 235, 0.72);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      box-shadow: 0 10px 28px rgba(95, 35, 16, 0.12);
+      position: sticky;
+      top: 10px;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .brand-pot {
+      position: absolute;
+      left: 4px;
+      right: 4px;
+      bottom: 5px;
+      height: 22px;
+      border: 3px solid var(--red-dark);
+      border-radius: 8px 8px 14px 14px;
+      background: linear-gradient(#fa5043, #bb241d);
+    }
+
+    .brand-pot::before,
+    .brand-pot::after {
+      content: "";
+      position: absolute;
+      top: 6px;
+      width: 9px;
+      height: 8px;
+      border: 3px solid var(--red-dark);
+      border-radius: 99px;
+      background: #ffd267;
+    }
+
+    .brand-pot::before {
+      left: -10px;
+    }
+
+    .brand-pot::after {
+      right: -10px;
+    }
+
+    .brand-flame {
+      position: absolute;
+      left: 15px;
+      top: 1px;
+      width: 12px;
+      height: 20px;
+      border-radius: 10px 10px 10px 2px;
+      background: #ff9b2f;
+      transform: rotate(45deg);
+      box-shadow: 0 0 0 5px rgba(255, 210, 103, 0.55);
+      animation: flame 0.9s ease-in-out infinite alternate;
+    }
+
+    .brand-title {
+      min-width: 0;
+    }
+
+    .brand-title strong {
+      display: block;
+      font-size: clamp(17px, 3vw, 22px);
+      line-height: 1.08;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand-title span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .room-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      max-width: 34vw;
+      padding: 7px 10px;
+      border: 2px solid rgba(41, 23, 22, 0.12);
+      border-radius: 999px;
+      background: #fff9df;
+      color: var(--muted);
+      font-size: 13px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: #fff6d8;
+      color: var(--red-dark);
+      border: 2px solid rgba(157, 35, 28, 0.16);
+      font-size: 18px;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .icon-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(95, 35, 16, 0.12);
+    }
+
+    main {
+      width: min(1120px, calc(100% - 28px));
+      margin: 18px auto 28px;
+      flex: 1;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .surface {
+      background: var(--panel);
+      border: 3px solid rgba(141, 50, 18, 0.18);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-panel {
+      min-height: 510px;
+      padding: clamp(18px, 4vw, 32px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      gap: 14px;
+      max-width: 620px;
+    }
+
+    .kicker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      color: var(--red-dark);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #fff0a8;
+      border: 2px solid rgba(157, 35, 28, 0.16);
+      color: var(--red-dark);
+      white-space: nowrap;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(32px, 7vw, 68px);
+      line-height: 0.95;
+      max-width: 10ch;
+    }
+
+    h2 {
+      font-size: clamp(24px, 4vw, 38px);
+      line-height: 1.04;
+    }
+
+    h3 {
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .lead {
+      max-width: 54ch;
+      color: #6f3d31;
+      font-size: clamp(15px, 2vw, 18px);
+      line-height: 1.7;
+    }
+
+    .room-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 2px;
+      max-width: 620px;
+    }
+
+    .field {
+      min-width: 0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .input {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 13px;
+      border: 2px solid rgba(141, 50, 18, 0.2);
+      border-radius: 14px;
+      color: var(--ink);
+      background: #fffdf2;
+      outline: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .input:focus {
+      border-color: var(--red);
+      box-shadow: 0 0 0 4px rgba(232, 63, 50, 0.13);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 16px;
+      border-radius: 14px;
+      background: #fff5cf;
+      color: var(--red-dark);
+      border: 2px solid rgba(157, 35, 28, 0.18);
+      font-weight: 900;
+      box-shadow: inset 0 -3px 0 rgba(157, 35, 28, 0.08);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: inset 0 -3px 0 rgba(157, 35, 28, 0.08), 0 12px 24px rgba(95, 35, 16, 0.12);
+    }
+
+    .btn.primary {
+      background: linear-gradient(180deg, #ff644f, #d92e25);
+      color: #fffaf0;
+      border-color: #a92620;
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.18);
+    }
+
+    .btn.teal {
+      background: linear-gradient(180deg, #1ba6a0, #0d7f7b);
+      color: #f4ffff;
+      border-color: #086b68;
+      text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    .btn.dark {
+      background: linear-gradient(180deg, #3c2a27, #211411);
+      color: #fff6de;
+      border-color: #1b0f0d;
+    }
+
+    .btn.ghost {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .hotpot-visual {
+      position: relative;
+      height: 300px;
+      margin-top: 14px;
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+    }
+
+    .table {
+      position: absolute;
+      left: 2%;
+      right: 2%;
+      bottom: 6px;
+      height: 70px;
+      border-radius: 50%;
+      background: rgba(143, 66, 30, 0.24);
+      transform: perspective(500px) rotateX(55deg);
+      z-index: 0;
+    }
+
+    .pot {
+      width: min(430px, 88vw);
+      height: 250px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .pot .steam {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 104px;
+      pointer-events: none;
+      opacity: 0.92;
+    }
+
+    .steam span {
+      position: absolute;
+      bottom: 0;
+      width: 16px;
+      height: 54px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.68);
+      filter: blur(4px);
+      animation: steam 2.3s ease-in-out infinite;
+    }
+
+    .steam span:nth-child(1) {
+      left: 31%;
+      animation-delay: 0s;
+    }
+
+    .steam span:nth-child(2) {
+      left: 47%;
+      height: 70px;
+      animation-delay: 0.35s;
+    }
+
+    .steam span:nth-child(3) {
+      left: 62%;
+      animation-delay: 0.7s;
+    }
+
+    .pot-lid {
+      position: absolute;
+      left: 15%;
+      right: 15%;
+      top: 48px;
+      height: 72px;
+      border: 5px solid #7c201b;
+      border-radius: 76px 76px 18px 18px;
+      background: linear-gradient(180deg, #ff715f 0%, #d92e25 72%);
+      z-index: 4;
+      transform-origin: 70% 80%;
+      transition: transform 0.75s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.35s ease;
+      box-shadow: inset 0 9px 0 rgba(255, 255, 255, 0.25), 0 14px 24px rgba(74, 20, 11, 0.24);
+    }
+
+    .pot-lid::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -24px;
+      width: 56px;
+      height: 32px;
+      transform: translateX(-50%);
+      border: 5px solid #7c201b;
+      border-radius: 60px 60px 20px 20px;
+      background: var(--yellow);
+    }
+
+    .pot.open .pot-lid {
+      transform: translateY(-92px) translateX(34px) rotate(12deg);
+      opacity: 0.96;
+    }
+
+    .pot-body {
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      bottom: 30px;
+      height: 138px;
+      border: 6px solid #7c201b;
+      border-radius: 28px 28px 82px 82px;
+      background: linear-gradient(180deg, #f7503f 0%, #c82e25 72%, #8e1d1a 100%);
+      box-shadow: inset 0 -16px 0 rgba(0, 0, 0, 0.14), 0 18px 28px rgba(95, 35, 16, 0.22);
+      z-index: 2;
+    }
+
+    .pot-body::before,
+    .pot-body::after {
+      content: "";
+      position: absolute;
+      top: 40px;
+      width: 34px;
+      height: 30px;
+      border: 6px solid #7c201b;
+      background: #ffb33f;
+      border-radius: 99px;
+      z-index: -1;
+    }
+
+    .pot-body::before {
+      left: -36px;
+    }
+
+    .pot-body::after {
+      right: -36px;
+    }
+
+    .broth {
+      position: absolute;
+      left: 12%;
+      right: 12%;
+      bottom: 128px;
+      height: 52px;
+      border: 5px solid #7c201b;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 25% 42%, #ffdf6a 0 7%, transparent 8%),
+        radial-gradient(circle at 54% 48%, #6ac16c 0 6%, transparent 7%),
+        radial-gradient(circle at 73% 40%, #f9f1dd 0 7%, transparent 8%),
+        linear-gradient(135deg, #d71f1a, #ff8b2a 58%, #ffcf58);
+      z-index: 3;
+      animation: simmer 1.8s ease-in-out infinite alternate;
+    }
+
+    .ingredient-float {
+      position: absolute;
+      z-index: 5;
+      font-size: 26px;
+      filter: drop-shadow(0 5px 2px rgba(80, 20, 12, 0.22));
+      animation: bob 2.2s ease-in-out infinite;
+    }
+
+    .ingredient-float:nth-of-type(1) {
+      left: 13%;
+      bottom: 82px;
+      animation-delay: 0.1s;
+    }
+
+    .ingredient-float:nth-of-type(2) {
+      right: 17%;
+      bottom: 94px;
+      animation-delay: 0.4s;
+    }
+
+    .ingredient-float:nth-of-type(3) {
+      left: 42%;
+      bottom: 76px;
+      animation-delay: 0.7s;
+    }
+
+    .ingredient-float:nth-of-type(4) {
+      right: 36%;
+      bottom: 112px;
+      animation-delay: 1s;
+    }
+
+    .flame-row {
+      position: absolute;
+      left: 50%;
+      bottom: 12px;
+      width: 190px;
+      height: 38px;
+      transform: translateX(-50%);
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      z-index: 1;
+    }
+
+    .flame {
+      width: 22px;
+      height: 34px;
+      border-radius: 18px 18px 18px 4px;
+      background: linear-gradient(180deg, #ffe275, #ff8d22 65%, #f2451d);
+      transform: rotate(45deg);
+      animation: flame 0.8s ease-in-out infinite alternate;
+    }
+
+    .flame:nth-child(2) {
+      animation-delay: 0.18s;
+    }
+
+    .flame:nth-child(3) {
+      animation-delay: 0.36s;
+    }
+
+    .side-panel {
+      padding: clamp(16px, 3vw, 24px);
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .panel-head p {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    .notice {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #fff2b9;
+      border: 2px dashed rgba(157, 35, 28, 0.24);
+      color: #764030;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .roster {
+      display: grid;
+      gap: 10px;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    .player-row {
+      min-height: 58px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 2px solid rgba(141, 50, 18, 0.16);
+      border-radius: 16px;
+      background: #fffdf2;
+    }
+
+    .player-name {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 900;
+    }
+
+    .player-name span:first-child {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .host-tag {
+      flex: 0 0 auto;
+      color: #fffaf0;
+      background: var(--red);
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .status.waiting {
+      background: #f4eadb;
+      color: #8a6a5e;
+    }
+
+    .status.ready {
+      background: #d9f3d7;
+      color: #22712c;
+    }
+
+    .status.cooked {
+      background: #ffe2d5;
+      color: #b33425;
+    }
+
+    .tiny {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .stage {
+      display: grid;
+      gap: 18px;
+    }
+
+    .handoff {
+      min-height: 510px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 18px;
+      padding: clamp(18px, 4vw, 32px);
+    }
+
+    .privacy-block {
+      display: grid;
+      place-items: center;
+      text-align: center;
+      gap: 18px;
+      min-height: 270px;
+      border-radius: 20px;
+      border: 3px dashed rgba(41, 23, 22, 0.14);
+      background:
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.34) 0 12px, rgba(255, 210, 103, 0.18) 12px 24px),
+        #fff4c9;
+      padding: 24px;
+    }
+
+    .privacy-lock {
+      width: 96px;
+      height: 96px;
+      border-radius: 28px;
+      display: grid;
+      place-items: center;
+      background: #3b2a27;
+      color: #fff4c9;
+      font-size: 42px;
+      transform: rotate(-3deg);
+      box-shadow: 0 16px 28px rgba(41, 23, 22, 0.18);
+    }
+
+    .draw-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .blind-card {
+      min-width: 0;
+      min-height: 292px;
+      display: grid;
+      place-items: stretch;
+      background: transparent;
+      perspective: 900px;
+      padding: 0;
+      border-radius: 18px;
+    }
+
+    .blind-card[disabled] {
+      opacity: 0.7;
+    }
+
+    .card-inner {
+      position: relative;
+      min-height: 292px;
+      border-radius: 18px;
+      transform-style: preserve-3d;
+      transition: transform 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    .blind-card.opened .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 18px;
+      border: 3px solid #8a2c1f;
+      backface-visibility: hidden;
+      overflow: hidden;
+      box-shadow: 0 14px 24px rgba(95, 35, 16, 0.16);
+    }
+
+    .card-front {
+      align-items: center;
+      text-align: center;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0 24%, transparent 24% 44%, rgba(255, 255, 255, 0.16) 44% 64%, transparent 64%),
+        linear-gradient(180deg, #ff5545, #c52b23);
+      color: #fff9e8;
+    }
+
+    .box-top {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .mystery-mark {
+      width: 86px;
+      height: 86px;
+      display: grid;
+      place-items: center;
+      border-radius: 24px;
+      background: #ffcf58;
+      color: var(--red-dark);
+      border: 4px solid #fff6d8;
+      font-size: 52px;
+      font-weight: 1000;
+      box-shadow: inset 0 -8px 0 rgba(157, 35, 28, 0.16);
+      animation: wiggle 1.7s ease-in-out infinite;
+    }
+
+    .box-name {
+      font-size: 24px;
+      line-height: 1.15;
+      font-weight: 1000;
+    }
+
+    .box-hint {
+      min-height: 34px;
+      color: rgba(255, 249, 232, 0.9);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      background: #fffdf2;
+      color: var(--ink);
+      align-items: stretch;
+      text-align: left;
+    }
+
+    .ingredient-emoji {
+      width: 74px;
+      height: 74px;
+      display: grid;
+      place-items: center;
+      border-radius: 22px;
+      background: #fff0a8;
+      border: 3px solid rgba(157, 35, 28, 0.16);
+      font-size: 42px;
+      box-shadow: inset 0 -6px 0 rgba(157, 35, 28, 0.08);
+    }
+
+    .ingredient-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .ingredient-title strong {
+      min-width: 0;
+      font-size: 23px;
+      line-height: 1.1;
+      word-break: break-word;
+    }
+
+    .rarity {
+      flex: 0 0 auto;
+      min-width: 44px;
+      min-height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #211411;
+      color: #fff0a8;
+      font-size: 12px;
+      font-weight: 1000;
+    }
+
+    .stats {
+      display: grid;
+      gap: 8px;
+    }
+
+    .meter {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: #f2e2bf;
+      overflow: hidden;
+    }
+
+    .bar span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+    }
+
+    .bar.dark span {
+      background: linear-gradient(90deg, #ffcf58, #e83f32, #6f1d1a);
+    }
+
+    .bar.tasty span {
+      background: linear-gradient(90deg, #7ecb66, #20a39e, #7250b5);
+    }
+
+    .selected-note {
+      min-height: 38px;
+      display: grid;
+      align-items: center;
+      color: #fff9e8;
+      background: var(--teal);
+      border-radius: 13px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .choice-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.18fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .selection-panel,
+    .pantry {
+      min-width: 0;
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 2px solid rgba(141, 50, 18, 0.16);
+      border-radius: 18px;
+      background: #fffdf2;
+    }
+
+    .selection-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .slot-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .slot {
+      min-width: 0;
+      min-height: 88px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      gap: 4px;
+      padding: 8px 6px;
+      border-radius: 16px;
+      border: 2px solid rgba(157, 35, 28, 0.16);
+      background: #fff4cb;
+      text-align: center;
+    }
+
+    .slot.empty {
+      border-style: dashed;
+      color: rgba(124, 90, 78, 0.72);
+      background: #fff9e9;
+    }
+
+    .slot-emoji {
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .slot-name {
+      width: 100%;
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1.18;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .slot-remove {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: #211411;
+      color: #fff6de;
+      border: 2px solid #fff6de;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .random-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .random-box {
+      min-width: 0;
+      min-height: 94px;
+      display: grid;
+      place-items: center;
+      gap: 5px;
+      padding: 10px 8px;
+      border-radius: 16px;
+      border: 2px solid #8a2c1f;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0 28%, transparent 28% 54%, rgba(255, 255, 255, 0.16) 54% 74%, transparent 74%),
+        linear-gradient(180deg, #ff5545, #c52b23);
+      color: #fff9e8;
+      text-align: center;
+      box-shadow: inset 0 -5px 0 rgba(33, 20, 17, 0.12);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .random-box:hover {
+      transform: translateY(-1px) rotate(-1deg);
+      box-shadow: inset 0 -5px 0 rgba(33, 20, 17, 0.12), 0 12px 24px rgba(95, 35, 16, 0.13);
+    }
+
+    .random-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--yellow);
+      color: var(--red-dark);
+      border: 3px solid #fff6d8;
+      font-size: 26px;
+      font-weight: 1000;
+      animation: wiggle 1.7s ease-in-out infinite;
+    }
+
+    .random-box strong {
+      font-size: 13px;
+      line-height: 1.15;
+    }
+
+    .random-box span:last-child {
+      color: rgba(255, 249, 232, 0.84);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .category-section {
+      display: grid;
+      gap: 9px;
+    }
+
+    .category-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--red-dark);
+      font-size: 14px;
+      font-weight: 1000;
+    }
+
+    .ingredient-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+      gap: 8px;
+    }
+
+    .ingredient-pick {
+      min-width: 0;
+      min-height: 70px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      border-radius: 15px;
+      border: 2px solid rgba(141, 50, 18, 0.14);
+      background: #fff8df;
+      color: var(--ink);
+      text-align: left;
+      transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .ingredient-pick:hover {
+      transform: translateY(-1px);
+      border-color: rgba(232, 63, 50, 0.38);
+      background: #fff1c0;
+    }
+
+    .ingredient-pick.selected {
+      border-color: var(--teal);
+      background: #e9fbf9;
+    }
+
+    .ingredient-pick.selected:disabled {
+      opacity: 1;
+      color: var(--ink);
+    }
+
+    .ingredient-pick:disabled {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .pick-emoji {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: #fff0a8;
+      border: 2px solid rgba(157, 35, 28, 0.12);
+      font-size: 25px;
+    }
+
+    .pick-copy {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .pick-name {
+      min-width: 0;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 1000;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .pick-meta {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .submit-bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border: 2px solid rgba(141, 50, 18, 0.16);
+      border-radius: 18px;
+      background: #fffdf2;
+    }
+
+    .secret-confirm {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .secret-confirm strong {
+      color: var(--red-dark);
+      word-break: break-word;
+    }
+
+    .reveal-panel {
+      padding: clamp(18px, 4vw, 32px);
+      display: grid;
+      gap: 18px;
+    }
+
+    .reveal-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.85fr);
+      gap: 18px;
+      align-items: center;
+    }
+
+    .reveal-stage {
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+      border-radius: 20px;
+      border: 3px dashed rgba(41, 23, 22, 0.14);
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.35) 1px, transparent 1px),
+        linear-gradient(180deg, #fff4c9, #ffe29d);
+      background-size: 26px 26px, auto;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .rays {
+      position: absolute;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      background:
+        conic-gradient(from 0deg, rgba(255, 255, 255, 0.74), transparent 13deg 30deg, rgba(255, 255, 255, 0.74) 30deg 44deg, transparent 44deg 66deg);
+      opacity: 0;
+      transform: scale(0.5) rotate(0deg);
+      transition: opacity 0.4s ease, transform 1.3s ease;
+      animation: rotate 9s linear infinite;
+    }
+
+    .pot.open + .rays,
+    .reveal-stage.open .rays {
+      opacity: 0.6;
+      transform: scale(1);
+    }
+
+    .reveal-stage .pot {
+      transform: scale(0.98);
+    }
+
+    .score-board {
+      display: grid;
+      gap: 14px;
+      align-content: center;
+    }
+
+    .score-card {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+      border-radius: 18px;
+      background: #fffdf2;
+      border: 2px solid rgba(141, 50, 18, 0.16);
+    }
+
+    .score-number {
+      display: flex;
+      align-items: end;
+      gap: 8px;
+      font-size: 54px;
+      line-height: 0.9;
+      font-weight: 1000;
+      color: var(--red-dark);
+    }
+
+    .score-number span {
+      font-size: 17px;
+      color: var(--muted);
+      line-height: 1.2;
+      padding-bottom: 6px;
+    }
+
+    .result-title {
+      font-size: clamp(25px, 5vw, 42px);
+      line-height: 1.02;
+      color: var(--red-dark);
+      word-break: break-word;
+    }
+
+    .result-comment {
+      color: #6f3d31;
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    .contrib-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .contrib {
+      min-height: 86px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border-radius: 18px;
+      background: #fffdf2;
+      border: 2px solid rgba(141, 50, 18, 0.16);
+    }
+
+    .contrib.hidden {
+      color: var(--muted);
+      background: repeating-linear-gradient(45deg, #fffdf2 0 11px, #fff5d5 11px 22px);
+    }
+
+    .contrib .ingredient-emoji {
+      width: 58px;
+      height: 58px;
+      font-size: 31px;
+      border-radius: 18px;
+    }
+
+    .reveal-emoji-pile {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+      justify-content: center;
+      width: 76px;
+      min-height: 64px;
+      padding: 6px;
+      border-radius: 18px;
+      background: #fff0a8;
+      border: 3px solid rgba(157, 35, 28, 0.16);
+      box-shadow: inset 0 -6px 0 rgba(157, 35, 28, 0.08);
+      font-size: 23px;
+      line-height: 1;
+    }
+
+    .ingredient-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 6px;
+    }
+
+    .ingredient-mini {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 25px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #fff4cb;
+      color: #6f3d31;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .contrib strong {
+      display: block;
+      font-size: 16px;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    .contrib span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      margin-top: 3px;
+    }
+
+    .combo-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .combo-tag {
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #f0f8f8;
+      color: #0e6f6b;
+      border: 2px solid rgba(19, 138, 135, 0.14);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .empty {
+      min-height: 160px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px;
+      border: 2px dashed rgba(141, 50, 18, 0.22);
+      border-radius: 18px;
+      color: var(--muted);
+      background: #fffdf2;
+      line-height: 1.65;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 20px;
+      z-index: 50;
+      max-width: min(520px, calc(100% - 28px));
+      transform: translateX(-50%) translateY(18px);
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #211411;
+      color: #fff6de;
+      box-shadow: 0 16px 36px rgba(41, 23, 22, 0.24);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes flame {
+      from {
+        transform: rotate(42deg) scale(0.9);
+      }
+      to {
+        transform: rotate(48deg) scale(1.08);
+      }
+    }
+
+    @keyframes steam {
+      0% {
+        transform: translateY(28px) scaleX(0.72);
+        opacity: 0;
+      }
+      35% {
+        opacity: 0.85;
+      }
+      100% {
+        transform: translateY(-44px) scaleX(1.3);
+        opacity: 0;
+      }
+    }
+
+    @keyframes simmer {
+      from {
+        transform: translateY(0) scaleX(1);
+      }
+      to {
+        transform: translateY(-2px) scaleX(1.02);
+      }
+    }
+
+    @keyframes bob {
+      0%,
+      100% {
+        transform: translateY(0) rotate(-3deg);
+      }
+      50% {
+        transform: translateY(-9px) rotate(4deg);
+      }
+    }
+
+    @keyframes wiggle {
+      0%,
+      100% {
+        transform: rotate(-4deg) scale(1);
+      }
+      50% {
+        transform: rotate(4deg) scale(1.05);
+      }
+    }
+
+    @keyframes rotate {
+      to {
+        transform: scale(1) rotate(360deg);
+      }
+    }
+
+    @media (max-width: 860px) {
+      .layout,
+      .reveal-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .choice-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-panel,
+      .handoff {
+        min-height: auto;
+      }
+
+      .draw-grid,
+      .contrib-list {
+        grid-template-columns: 1fr;
+      }
+
+      .blind-card,
+      .card-inner {
+        min-height: 258px;
+      }
+
+      .submit-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .topbar {
+        width: calc(100% - 18px);
+        align-items: flex-start;
+      }
+
+      .brand-title span {
+        display: none;
+      }
+
+      .room-chip {
+        display: none;
+      }
+
+      main {
+        width: calc(100% - 18px);
+        margin-top: 12px;
+      }
+
+      .surface {
+        border-radius: 18px;
+      }
+
+      .room-form {
+        grid-template-columns: 1fr;
+      }
+
+      .slot-grid,
+      .random-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .ingredient-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .hotpot-visual {
+        height: 260px;
+      }
+
+      .pot {
+        width: min(350px, 84vw);
+        height: 225px;
+      }
+
+      .pot-body {
+        left: 6%;
+        right: 6%;
+      }
+
+      .pot-body::before,
+      .pot-body::after {
+        display: none;
+      }
+
+      .actions .btn,
+      .btn.primary,
+      .btn.teal,
+      .btn.dark {
+        width: 100%;
+      }
+
+      .player-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand" aria-label="火锅盲盒黑暗料理">
+        <div class="brand-mark" aria-hidden="true">
+          <div class="brand-flame"></div>
+          <div class="brand-pot"></div>
+        </div>
+        <div class="brand-title">
+          <strong>火锅盲盒黑暗料理</strong>
+          <span>本机模拟多人联机 · 轮流传手机操作</span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <div class="room-chip" id="roomChip">未开房</div>
+        <button class="icon-btn" type="button" title="重置本地房间" aria-label="重置本地房间" data-action="reset">↻</button>
+      </div>
+    </header>
+    <main id="app" aria-live="polite"></main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      /*
+       * ===== 关键配置 1：食材库 =====
+       * dark 越高越黑暗，tasty 越高越美味。tags 会参与组合判定。
+       */
+      const INGREDIENTS = [
+        { id: "mala_base", name: "牛油麻辣锅底", category: "底料", rarity: "R", emoji: "🌶️", dark: 1, tasty: 9, tags: ["base", "spicy", "classic"], desc: "红油翻滚，经典安全牌。" },
+        { id: "tomato_base", name: "番茄浓汤锅底", category: "底料", rarity: "N", emoji: "🍅", dark: 0, tasty: 8, tags: ["base", "sweet", "classic"], desc: "酸甜稳健，适合救场。" },
+        { id: "mushroom_base", name: "菌菇清汤锅底", category: "底料", rarity: "N", emoji: "🍄", dark: 0, tasty: 7, tags: ["base", "veggie", "classic"], desc: "温柔到像没参与整活。" },
+        { id: "milk_base", name: "牛奶汤底", category: "底料", rarity: "SR", emoji: "🥛", dark: 5, tasty: 4, tags: ["base", "dairy", "soft"], desc: "香是香，锅也开始像甜品店。" },
+        { id: "cola_base", name: "可乐鸳鸯锅底", category: "底料", rarity: "SR", emoji: "🥤", dark: 7, tasty: 3, tags: ["base", "sweet", "bizarre", "soda"], desc: "气泡和辣椒油达成临时停战。" },
+        { id: "tom_yum_base", name: "冬阴功汤底", category: "底料", rarity: "R", emoji: "🍋", dark: 2, tasty: 8, tags: ["base", "sour", "spicy", "fresh"], desc: "酸辣开胃，适合把混乱拉得更明亮。" },
+        { id: "coconut_chicken_base", name: "椰子鸡汤底", category: "底料", rarity: "R", emoji: "🥥", dark: 1, tasty: 8, tags: ["base", "sweet", "classic", "soft"], desc: "温柔清甜，像在火锅里放了白月光。" },
+        { id: "durian_milk_base", name: "榴莲奶汤底", category: "底料", rarity: "SSR", emoji: "🟡", dark: 9, tasty: 4, tags: ["base", "dairy", "smelly", "bizarre"], desc: "锅底一开口，整桌都安静。" },
+        { id: "beef_roll", name: "肥牛卷", category: "肉类", rarity: "N", emoji: "🥩", dark: 0, tasty: 9, tags: ["meat", "classic"], desc: "所有人都愿意夹两筷子。" },
+        { id: "wagyu_ssr", name: "SSR 和牛", category: "肉类", rarity: "SSR", emoji: "🏆", dark: 0, tasty: 10, tags: ["meat", "luxury", "classic"], desc: "金光一闪，预算碎了。" },
+        { id: "tripe", name: "脆毛肚", category: "肉类", rarity: "R", emoji: "🥢", dark: 1, tasty: 8, tags: ["meat", "classic", "crunch"], desc: "七上八下，气氛上头。" },
+        { id: "intestine", name: "九转大肠", category: "奇葩食材", rarity: "SR", emoji: "🌀", dark: 7, tasty: 5, tags: ["meat", "bizarre", "bold"], desc: "有人鼓掌，有人沉默。" },
+        { id: "lamb_roll", name: "羊肉卷", category: "肉类", rarity: "N", emoji: "🐑", dark: 1, tasty: 8, tags: ["meat", "classic"], desc: "涮起来很稳，膻味也有存在感。" },
+        { id: "duck_blood", name: "鸭血方块", category: "肉类", rarity: "R", emoji: "🧊", dark: 2, tasty: 7, tags: ["meat", "classic", "soft"], desc: "红亮沉稳，适合吸满汤底。" },
+        { id: "luncheon_meat", name: "厚切午餐肉", category: "肉类", rarity: "N", emoji: "🥓", dark: 1, tasty: 7, tags: ["meat", "classic", "snack"], desc: "童年滤镜和钠含量一起上桌。" },
+        { id: "brain", name: "猪脑花", category: "肉类", rarity: "SR", emoji: "🧠", dark: 6, tasty: 6, tags: ["meat", "bizarre", "soft", "bold"], desc: "口感细腻，但需要心理建设。" },
+        { id: "chicken_wing_tip", name: "鸡翅尖", category: "肉类", rarity: "R", emoji: "🍗", dark: 2, tasty: 7, tags: ["meat", "classic"], desc: "小小一个，越啃越忙。" },
+        { id: "beef_ball", name: "撒尿牛丸", category: "肉类", rarity: "R", emoji: "⚽", dark: 2, tasty: 8, tags: ["meat", "classic", "juicy"], desc: "咬下去之前，请保护白衣服。" },
+        { id: "shrimp_paste", name: "手打虾滑", category: "海鲜", rarity: "R", emoji: "🍤", dark: 0, tasty: 8, tags: ["seafood", "classic", "soft"], desc: "弹弹弹，锅里开会。" },
+        { id: "oyster", name: "生蚝小队", category: "海鲜", rarity: "SR", emoji: "🦪", dark: 3, tasty: 7, tags: ["seafood", "fresh"], desc: "鲜味很猛，风险也很会抢镜。" },
+        { id: "crab_stick", name: "蟹柳棒", category: "海鲜", rarity: "N", emoji: "🦀", dark: 0, tasty: 6, tags: ["seafood", "classic"], desc: "真蟹听了会沉默，但它确实好涮。" },
+        { id: "fresh_shrimp", name: "开背鲜虾", category: "海鲜", rarity: "R", emoji: "🦐", dark: 0, tasty: 8, tags: ["seafood", "fresh", "classic"], desc: "鲜甜弹牙，负责给锅留一点体面。" },
+        { id: "squid", name: "鱿鱼须", category: "海鲜", rarity: "R", emoji: "🦑", dark: 2, tasty: 7, tags: ["seafood", "fresh", "chewy"], desc: "弹性十足，筷子夹它像做反应力测试。" },
+        { id: "cod_slice", name: "鳕鱼片", category: "海鲜", rarity: "R", emoji: "🐟", dark: 1, tasty: 8, tags: ["seafood", "fresh", "soft"], desc: "下锅要快，碎掉也要保持优雅。" },
+        { id: "seaweed_knot", name: "海带结", category: "海鲜", rarity: "N", emoji: "🌊", dark: 1, tasty: 6, tags: ["seafood", "veggie", "classic"], desc: "海味和纤维感都在线。" },
+        { id: "tofu", name: "冻豆腐", category: "蔬菜豆制品", rarity: "N", emoji: "⬜", dark: 0, tasty: 7, tags: ["veggie", "classic", "soft"], desc: "吸满汤汁的好学生。" },
+        { id: "coriander_mud", name: "香菜泥", category: "蔬菜豆制品", rarity: "SR", emoji: "🌿", dark: 5, tasty: 4, tags: ["veggie", "herb", "bizarre"], desc: "香菜党狂喜，反香菜党报警。" },
+        { id: "houttuynia", name: "折耳根", category: "蔬菜豆制品", rarity: "SR", emoji: "🌱", dark: 6, tasty: 4, tags: ["veggie", "herb", "bizarre"], desc: "入口一秒，南北方开始辩论。" },
+        { id: "konjac", name: "魔芋结", category: "蔬菜豆制品", rarity: "N", emoji: "🪢", dark: 1, tasty: 6, tags: ["veggie", "classic", "chewy"], desc: "很能吸味，也很会装无辜。" },
+        { id: "enoki", name: "金针菇", category: "蔬菜豆制品", rarity: "N", emoji: "🍄", dark: 1, tasty: 7, tags: ["veggie", "classic", "chewy"], desc: "负责缠住筷子和话题。" },
+        { id: "potato", name: "土豆片", category: "蔬菜豆制品", rarity: "N", emoji: "🥔", dark: 0, tasty: 7, tags: ["veggie", "classic", "starch"], desc: "煮久一点，能把锅底变得厚实。" },
+        { id: "lotus_root", name: "莲藕片", category: "蔬菜豆制品", rarity: "N", emoji: "🪷", dark: 0, tasty: 7, tags: ["veggie", "classic", "crunch"], desc: "脆感稳定，孔洞负责藏汤。" },
+        { id: "baby_cabbage", name: "娃娃菜", category: "蔬菜豆制品", rarity: "N", emoji: "🥬", dark: 0, tasty: 6, tags: ["veggie", "classic", "soft"], desc: "把油辣锅底变得稍微讲道理。" },
+        { id: "wood_ear", name: "黑木耳", category: "蔬菜豆制品", rarity: "N", emoji: "🖤", dark: 1, tasty: 6, tags: ["veggie", "classic", "crunch"], desc: "脆脆的，存在感比颜色温柔。" },
+        { id: "bean_skin", name: "响铃豆皮", category: "蔬菜豆制品", rarity: "R", emoji: "📜", dark: 1, tasty: 8, tags: ["veggie", "classic", "crunch"], desc: "吸汤速度快到需要专人盯防。" },
+        { id: "corn", name: "甜玉米段", category: "蔬菜豆制品", rarity: "N", emoji: "🌽", dark: 0, tasty: 7, tags: ["veggie", "sweet", "classic"], desc: "甜味救场员，尤其适合辣锅。" },
+        { id: "broccoli", name: "西兰花", category: "蔬菜豆制品", rarity: "N", emoji: "🥦", dark: 1, tasty: 6, tags: ["veggie", "classic"], desc: "努力健康，但很容易吸满红油。" },
+        { id: "stinky_tofu", name: "臭豆腐", category: "奇葩食材", rarity: "SR", emoji: "🧀", dark: 7, tasty: 6, tags: ["veggie", "tofu", "smelly", "bizarre"], desc: "臭得很认真，香得也很有争议。" },
+        { id: "wide_noodle", name: "火锅宽粉", category: "主食", rarity: "N", emoji: "🍜", dark: 0, tasty: 7, tags: ["staple", "classic", "chewy"], desc: "吸汤大户，负责收尾。" },
+        { id: "instant_noodle", name: "方便面饼", category: "主食", rarity: "R", emoji: "🍥", dark: 2, tasty: 7, tags: ["staple", "snack", "classic"], desc: "一放进去，夜宵感就来了。" },
+        { id: "rice_ball", name: "米饭团", category: "主食", rarity: "R", emoji: "🍚", dark: 3, tasty: 5, tags: ["staple", "starch", "bizarre"], desc: "像粥又像锅巴，取决于煮多久。" },
+        { id: "dumpling", name: "迷你水饺", category: "主食", rarity: "N", emoji: "🥟", dark: 1, tasty: 7, tags: ["staple", "classic"], desc: "一锅里出现它，饭局突然像过年。" },
+        { id: "fried_dough", name: "小油条", category: "主食", rarity: "R", emoji: "🥖", dark: 2, tasty: 7, tags: ["staple", "classic", "crunch"], desc: "刚下锅脆，晚一点就变成汤的形状。" },
+        { id: "rice_cake", name: "糯叽叽年糕", category: "主食", rarity: "N", emoji: "🍡", dark: 1, tasty: 7, tags: ["staple", "sweet", "chewy"], desc: "软糯拉扯，适合偷偷多夹。" },
+        { id: "garlic_sesame", name: "蒜泥香油碟", category: "蘸料", rarity: "N", emoji: "🧄", dark: 1, tasty: 8, tags: ["sauce", "classic"], desc: "川渝灵魂外挂。" },
+        { id: "sesame_paste", name: "浓厚麻酱", category: "蘸料", rarity: "N", emoji: "🥜", dark: 1, tasty: 8, tags: ["sauce", "classic", "nutty"], desc: "北方玩家的安全感。" },
+        { id: "satay", name: "沙茶酱", category: "蘸料", rarity: "R", emoji: "🥣", dark: 1, tasty: 7, tags: ["sauce", "classic", "seafood"], desc: "咸香浓郁，能把很多东西拉回正轨。" },
+        { id: "mustard", name: "芥末蘸料", category: "蘸料", rarity: "SR", emoji: "💚", dark: 5, tasty: 4, tags: ["sauce", "bizarre", "spicy"], desc: "冲鼻一瞬间，大家都醒了。" },
+        { id: "fermented_bean", name: "腐乳汁", category: "蘸料", rarity: "R", emoji: "🫙", dark: 3, tasty: 6, tags: ["sauce", "fermented", "classic"], desc: "咸香强势，适合给清汤加戏。" },
+        { id: "icecream", name: "香草冰淇淋球", category: "甜品", rarity: "SR", emoji: "🍨", dark: 8, tasty: 3, tags: ["dessert", "dairy", "ice", "bizarre"], desc: "下锅瞬间，童年和火锅都融化了。" },
+        { id: "durian", name: "榴莲盲盒块", category: "甜品", rarity: "SSR", emoji: "💛", dark: 8, tasty: 5, tags: ["dessert", "bizarre", "smelly"], desc: "味道一出场，全桌都知道了。" },
+        { id: "chocolate", name: "黑巧克力酱", category: "甜品", rarity: "SR", emoji: "🍫", dark: 7, tasty: 3, tags: ["dessert", "sweet", "bizarre"], desc: "锅底颜色变得很有故事。" },
+        { id: "cake", name: "奶油蛋糕块", category: "甜品", rarity: "SR", emoji: "🍰", dark: 8, tasty: 3, tags: ["dessert", "dairy", "sweet", "bizarre"], desc: "奶油遇热坍塌，仪式感也一起坍塌。" },
+        { id: "mango_pudding", name: "芒果布丁", category: "甜品", rarity: "R", emoji: "🥭", dark: 6, tasty: 4, tags: ["dessert", "sweet", "soft", "bizarre"], desc: "滑进锅里时，甜品师可能会叹气。" },
+        { id: "bubble_tea", name: "珍珠奶茶料", category: "甜品", rarity: "SR", emoji: "🧋", dark: 7, tasty: 4, tags: ["dessert", "dairy", "sweet", "chewy", "bizarre"], desc: "珍珠在辣锅里获得第二职业。" },
+        { id: "marshmallow", name: "棉花糖", category: "甜品", rarity: "R", emoji: "☁️", dark: 6, tasty: 3, tags: ["dessert", "sweet", "bizarre"], desc: "看起来可爱，融化后很难解释。" },
+        { id: "strawberry_jam", name: "草莓果酱", category: "甜品", rarity: "SR", emoji: "🍓", dark: 7, tasty: 3, tags: ["dessert", "sweet", "bizarre"], desc: "红上加红，锅底开始像甜辣谜题。" },
+        { id: "mint_candy", name: "薄荷糖", category: "奇葩食材", rarity: "R", emoji: "🍬", dark: 6, tasty: 2, tags: ["sweet", "cool", "bizarre"], desc: "火锅突然拥有牙膏般的清新。" },
+        { id: "latiao", name: "辣条结", category: "奇葩食材", rarity: "R", emoji: "🔥", dark: 4, tasty: 6, tags: ["spicy", "snack", "bizarre"], desc: "街边小卖部友情赞助。" },
+        { id: "pickled_bamboo", name: "螺蛳粉酸笋", category: "奇葩食材", rarity: "SR", emoji: "🥒", dark: 7, tasty: 5, tags: ["sour", "smelly", "bizarre"], desc: "气味穿透锅盖，直达灵魂。" },
+        { id: "blue_cheese", name: "蓝纹奶酪", category: "奇葩食材", rarity: "SSR", emoji: "🧀", dark: 8, tasty: 4, tags: ["dairy", "smelly", "bizarre"], desc: "高级和离谱只隔着一只汤勺。" },
+        { id: "coffee_powder", name: "意式咖啡粉", category: "奇葩食材", rarity: "SR", emoji: "☕", dark: 7, tasty: 3, tags: ["bitter", "bizarre"], desc: "锅底提神，舌头失眠。" },
+        { id: "lemon_slice", name: "暴击柠檬片", category: "奇葩食材", rarity: "R", emoji: "🍋", dark: 4, tasty: 5, tags: ["sour", "fresh", "bizarre"], desc: "酸到表情管理下线。" },
+        { id: "pickled_chicken_feet", name: "泡椒凤爪", category: "奇葩食材", rarity: "R", emoji: "🐔", dark: 5, tasty: 6, tags: ["meat", "sour", "spicy", "bizarre"], desc: "明明能吃，但放进锅里就很有想法。" },
+        { id: "chips", name: "薯片碎", category: "奇葩食材", rarity: "R", emoji: "🥔", dark: 5, tasty: 4, tags: ["snack", "starch", "bizarre"], desc: "脆感保质期按秒计算。" },
+        { id: "century_egg", name: "皮蛋块", category: "奇葩食材", rarity: "SR", emoji: "🥚", dark: 7, tasty: 5, tags: ["smelly", "bizarre", "bold"], desc: "透明深色的神秘感，和锅底很配。" },
+        { id: "yogurt_cube", name: "酸奶冻块", category: "奇葩食材", rarity: "SR", emoji: "🥛", dark: 8, tasty: 3, tags: ["dairy", "sour", "ice", "bizarre"], desc: "冷酸热辣同屏，味觉开始分屏处理。" },
+        { id: "wasabi_peas", name: "芥末青豆", category: "奇葩食材", rarity: "R", emoji: "🟢", dark: 5, tasty: 4, tags: ["snack", "spicy", "bizarre"], desc: "嘎嘣脆，冲鼻也很脆。" },
+        { id: "laoganma_popsicle", name: "老干妈冰棒", category: "奇葩食材", rarity: "SSR", emoji: "🧊", dark: 9, tasty: 3, tags: ["spicy", "ice", "bizarre"], desc: "冷冻辣椒油的存在，让全桌开始怀疑人生。" },
+        { id: "fish_tofu", name: "鱼豆腐", category: "海鲜", rarity: "N", emoji: "🍢", dark: 0, tasty: 7, tags: ["seafood", "classic"], desc: "便利店级别的安心。" }
+      ];
+
+      /*
+       * ===== 关键配置 2：盲盒类型与权重 =====
+       * 用户可以直接点选食材，也可以点这些随机盲盒自动补 1 个食材。
+       */
+      const BOX_TYPES = [
+        { id: "base", name: "底料盲盒", hint: "锅的性格，从这里开始偏航", filter: item => item.tags.includes("base"), weight: { N: 46, R: 28, SR: 19, SSR: 7 } },
+        { id: "main", name: "正经食材盲盒", hint: "大概率能吃，也可能突然很贵", filter: item => ["肉类", "海鲜", "蔬菜豆制品", "主食", "蘸料"].includes(item.category), weight: { N: 43, R: 34, SR: 18, SSR: 5 } },
+        { id: "chaos", name: "命运盲盒", hint: "隐藏款和事故款都在这里排队", filter: item => item.tags.includes("bizarre") || item.tags.includes("luxury"), weight: { N: 10, R: 28, SR: 42, SSR: 20 } }
+      ];
+
+      /*
+       * ===== 关键配置 3：黑暗料理组合逻辑 =====
+       * 修改 allTags / anyIds / minBizarre 等条件，就能扩展结算规则。
+       */
+      const COMBO_RULES = [
+        { name: "冰火两重天", allTags: ["ice", "spicy"], darkDelta: 16, tastyDelta: -8, comment: "麻辣锅里漂着冰淇淋，温度和理智都很难统一。" },
+        { name: "海鲜奶盖计划", allTags: ["seafood", "dairy"], darkDelta: 13, tastyDelta: -5, comment: "鲜味和奶香牵手成功，但全桌表情不太成功。" },
+        { name: "草本冲击波", allTags: ["herb", "dessert"], darkDelta: 14, tastyDelta: -7, comment: "香菜、折耳根和甜品同锅，空气里都是问号。" },
+        { name: "气味封印解除", minSmelly: 2, darkDelta: 18, tastyDelta: -6, comment: "锅盖一开，房间自动进入通风模式。" },
+        { name: "小卖部豪赌", allTags: ["snack", "soda"], darkDelta: 10, tastyDelta: -4, comment: "像把童年零食柜直接倒进了火锅。" },
+        { name: "肠道试炼", anyIds: ["intestine"], allTags: ["dairy"], darkDelta: 12, tastyDelta: -6, comment: "大肠遇见牛奶汤底，勇者才敢续汤。" },
+        { name: "黑暗料理王入场", minBizarre: 3, darkDelta: 20, tastyDelta: -10, comment: "奇葩食材超过安全阈值，锅已经拥有独立人格。" },
+        { name: "贵气救场", allTags: ["luxury", "classic"], maxBizarre: 1, darkDelta: -8, tastyDelta: 12, comment: "和牛负责把场面拉回高级餐厅。" },
+        { name: "素食仙气锅", allTags: ["veggie"], maxMeat: 0, darkDelta: -6, tastyDelta: 8, comment: "没有肉也能好吃，前提是没人偷偷丢冰淇淋。" }
+      ];
+
+      const STORAGE_KEY = "hotpot_blind_box_dark_demo_v1";
+      const PICK_LIMIT = 5;
+      const CATEGORY_ORDER = ["底料", "肉类", "海鲜", "蔬菜豆制品", "主食", "蘸料", "甜品", "奇葩食材"];
+      const DEFAULT_NAMES = ["小明", "小红", "阿锅", "辣妹", "汤圆", "老王", "锅边侦探"];
+
+      const defaultState = () => ({
+        roomCode: makeRoomCode(),
+        phase: "lobby",
+        players: [],
+        activePlayerId: null,
+        privateGateOpen: false,
+        turnOptions: [],
+        selectedIngredientIds: [],
+        revealOpen: false,
+        createdAt: Date.now()
+      });
+
+      let state = loadState();
+      const app = document.querySelector("#app");
+      const roomChip = document.querySelector("#roomChip");
+      const toast = document.querySelector("#toast");
+      let toastTimer = 0;
+
+      render();
+
+      document.addEventListener("click", event => {
+        const button = event.target.closest("[data-action]");
+        if (!button) return;
+        const action = button.dataset.action;
+
+        if (action === "reset") return resetRoom();
+        if (action === "join") return joinPlayer();
+        if (action === "quick") return quickJoin();
+        if (action === "toggle-ready") return toggleReady(button.dataset.playerId);
+        if (action === "ready-all") return readyAll();
+        if (action === "copy-room") return copyRoomCode();
+        if (action === "start") return startDrawPhase();
+        if (action === "open-gate") return openPrivateGate();
+        if (action === "choose-ingredient") return chooseIngredient(button.dataset.ingredientId);
+        if (action === "remove-selected") return removeSelectedIngredient(Number(button.dataset.index));
+        if (action === "random-pick") return randomPick(button.dataset.boxType);
+        if (action === "fill-random") return fillRandomPicks();
+        if (action === "submit-secret") return submitSecretIngredient();
+        if (action === "back-lobby") return backToLobby();
+        if (action === "open-pot") return openPot();
+        if (action === "new-round") return newRoundSamePlayers();
+      });
+
+      document.addEventListener("keydown", event => {
+        if (event.key !== "Enter") return;
+        const active = document.activeElement;
+        if (!active) return;
+        if (active.id === "nickname" || active.id === "roomInput") joinPlayer();
+      });
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return defaultState();
+          const parsed = JSON.parse(raw);
+          if (!parsed || !Array.isArray(parsed.players)) return defaultState();
+          const nextState = { ...defaultState(), ...parsed };
+          nextState.players = nextState.players.map(player => normalizePlayer(player));
+          if (!Array.isArray(nextState.selectedIngredientIds)) {
+            nextState.selectedIngredientIds = nextState.selectedIngredientId ? [nextState.selectedIngredientId] : [];
+          }
+          nextState.selectedIngredientIds = nextState.selectedIngredientIds.filter(id => getIngredient(id)).slice(0, PICK_LIMIT);
+          return nextState;
+        } catch (error) {
+          return defaultState();
+        }
+      }
+
+      function normalizePlayer(player) {
+        const ids = Array.isArray(player.ingredientIds)
+          ? player.ingredientIds
+          : player.ingredientId
+            ? [player.ingredientId]
+            : [];
+        const validIds = ids.filter(id => getIngredient(id)).slice(0, PICK_LIMIT);
+        return {
+          ...player,
+          ingredientIds: validIds,
+          ingredientId: validIds[0] || null
+        };
+      }
+
+      function persist() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function makeRoomCode() {
+        const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        return Array.from({ length: 5 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+      }
+
+      function uid(prefix) {
+        return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+      }
+
+      function h(value) {
+        return String(value ?? "").replace(/[&<>"']/g, char => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          "\"": "&quot;",
+          "'": "&#039;"
+        })[char]);
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+      }
+
+      function getIngredient(id) {
+        return INGREDIENTS.find(item => item.id === id);
+      }
+
+      function render() {
+        roomChip.textContent = state.players.length
+          ? `房间 ${state.roomCode} · ${state.players.length} 人`
+          : "未开房";
+
+        if (state.phase === "draw") {
+          app.innerHTML = renderDraw();
+          return;
+        }
+        if (state.phase === "reveal") {
+          app.innerHTML = renderReveal();
+          return;
+        }
+        app.innerHTML = renderLobby();
+      }
+
+      function renderLobby() {
+        const canStart = state.players.length >= 2 && state.players.every(player => player.ready);
+        const joinedCount = state.players.length;
+        return `
+          <section class="layout">
+            <div class="surface hero-panel">
+              <div class="hero-copy">
+                <div class="kicker">
+                  <span class="pill">🔥 私密投料</span>
+                  <span class="pill">🥢 本机联机模拟</span>
+                  <span class="pill">🍲 一键揭锅</span>
+                </div>
+                <h1>今晚这锅谁也别想提前知道</h1>
+                <p class="lead">输入昵称加入同一个本地房间。所有人准备后，手机会轮流交给每位玩家选择 5 个食材；可以明牌点选，也可以用随机盲盒补位。直到开锅前，其他人的食材都会被隐藏。</p>
+                <div class="room-form">
+                  <div class="field">
+                    <label for="nickname">玩家昵称</label>
+                    <input class="input" id="nickname" maxlength="12" placeholder="例如：小明" autocomplete="off" />
+                  </div>
+                  <div class="field">
+                    <label for="roomInput">房间码（Mock）</label>
+                    <input class="input" id="roomInput" maxlength="8" placeholder="${h(state.roomCode)}" autocomplete="off" />
+                  </div>
+                </div>
+                <div class="actions">
+                  <button class="btn primary" type="button" data-action="join">➕ 创建/加入房间</button>
+                  <button class="btn" type="button" data-action="quick">⚡ 加入 3 名模拟玩家</button>
+                  <button class="btn ghost" type="button" data-action="copy-room" ${joinedCount ? "" : "disabled"}>📋 复制房间码</button>
+                </div>
+              </div>
+              ${renderHotpotVisual(false)}
+            </div>
+
+            <aside class="surface side-panel">
+              <div class="panel-head">
+                <div>
+                  <h2>准备室</h2>
+                  <p>房主是第一位加入的玩家。这里会显示准备状态，但不会展示任何食材。</p>
+                </div>
+                <span class="status ${canStart ? "ready" : "waiting"}">${joinedCount}/8 人</span>
+              </div>
+              ${joinedCount ? renderRoster({ reveal: false }) : `<div class="empty">还没有玩家入座。先输入昵称，再把手机交给下一位玩家继续加入。</div>`}
+              <div class="actions">
+                <button class="btn teal" type="button" data-action="ready-all" ${joinedCount ? "" : "disabled"}>✅ 全员准备</button>
+                <button class="btn primary" type="button" data-action="start" ${canStart ? "" : "disabled"}>🎲 开始选食材</button>
+              </div>
+              <div class="notice">流程提示：加入玩家 → 全员准备 → 轮流私密选 5 个食材 → 暗中下锅 → 房主揭开锅盖。</div>
+            </aside>
+          </section>
+        `;
+      }
+
+      function renderDraw() {
+        const player = getActivePlayer();
+        if (!player) {
+          state.phase = "reveal";
+          persist();
+          return renderReveal();
+        }
+
+        if (!state.privateGateOpen) {
+          return `
+            <section class="layout">
+              <div class="surface handoff">
+                <div class="panel-head">
+                  <div>
+                    <h2>请传给：${h(player.name)}</h2>
+                    <p>这是私密操作区。点击开始前，上一位玩家不应该继续看屏幕。</p>
+                  </div>
+                  <span class="status waiting">等待接手机</span>
+                </div>
+                <div class="privacy-block">
+                  <div class="privacy-lock" aria-hidden="true">🔒</div>
+                  <div>
+                    <h2>食材保密中</h2>
+                    <p class="lead">当前只会显示玩家状态，已下锅的食材不会泄漏。${h(player.name)} 接过手机后再进入私密选菜页。</p>
+                  </div>
+                  <button class="btn primary" type="button" data-action="open-gate">我是 ${h(player.name)}，开始选食材</button>
+                </div>
+                <div class="notice">传手机模式：同一台设备模拟多人联机。每个人只在自己的回合看到自己的食材。</div>
+              </div>
+              <aside class="surface side-panel">
+                <div class="panel-head">
+                  <div>
+                    <h2>下锅进度</h2>
+                    <p>其他玩家只会看到“已下锅（食材保密）”。</p>
+                  </div>
+                  <span class="status cooked">${submittedCount()}/${state.players.length}</span>
+                </div>
+                ${renderRoster({ reveal: false })}
+              </aside>
+            </section>
+          `;
+        }
+
+        const selectedIds = getCurrentSelectedIds();
+        const selectedCount = selectedIds.length;
+        const canSubmit = selectedCount === PICK_LIMIT;
+        return `
+          <section class="stage">
+            <div class="surface handoff">
+              <div class="panel-head">
+                <div>
+                  <h2>${h(player.name)} 的私密配菜台</h2>
+                  <p>请选择总共 ${PICK_LIMIT} 个食材。可以从菜单直接点选，也可以点随机盲盒让系统替你补 1 个。</p>
+                </div>
+                <span class="status waiting">已选 ${selectedCount}/${PICK_LIMIT}</span>
+              </div>
+
+              <div class="choice-layout">
+                <div class="selection-panel">
+                  <div class="selection-summary">
+                    <span>你的秘密锅料</span>
+                    <span>${selectedCount}/${PICK_LIMIT}</span>
+                  </div>
+                  ${renderSelectedSlots(selectedIds)}
+                  <div class="random-row">
+                    ${BOX_TYPES.map(type => renderRandomBox(type, selectedCount)).join("")}
+                  </div>
+                  <button class="btn teal" type="button" data-action="fill-random" ${selectedCount >= PICK_LIMIT ? "disabled" : ""}>🎰 随机补满剩余槽位</button>
+                  <p class="tiny">随机盲盒不会重复选择你已经放进槽位的食材。点槽位右上角可以移除。</p>
+                </div>
+
+                <div class="pantry">
+                  <div class="selection-summary">
+                    <span>emoji 食材池</span>
+                    <span>${INGREDIENTS.length} 种</span>
+                  </div>
+                  ${renderIngredientPantry(selectedIds)}
+                </div>
+              </div>
+
+              <div class="submit-bar">
+                <div class="secret-confirm">
+                  ${canSubmit
+                    ? `<span>已凑齐 <strong>${PICK_LIMIT}</strong> 个食材。提交后屏幕会清空，下一位玩家只会看到你“已下锅”。</span>`
+                    : `<span>还需要选择 <strong>${PICK_LIMIT - selectedCount}</strong> 个食材才能暗中下锅。</span>`}
+                </div>
+                <button class="btn dark" type="button" data-action="submit-secret" ${canSubmit ? "" : "disabled"}>🤫 暗中下锅</button>
+              </div>
+            </div>
+          </section>
+        `;
+      }
+
+      function renderReveal() {
+        const result = evaluateHotpot();
+        const isOpen = state.revealOpen;
+        return `
+          <section class="surface reveal-panel">
+            <div class="panel-head">
+              <div>
+                <h2>揭锅大时刻</h2>
+                <p>所有玩家都已经下锅。揭开锅盖后，贡献清单和黑暗指数会同步公开。</p>
+              </div>
+              <span class="status ${isOpen ? "cooked" : "ready"}">${isOpen ? "已揭晓" : "等待开锅"}</span>
+            </div>
+
+            <div class="reveal-hero">
+              <div class="reveal-stage ${isOpen ? "open" : ""}">
+                <div class="rays" aria-hidden="true"></div>
+                ${renderHotpotVisual(isOpen)}
+              </div>
+
+              <div class="score-board">
+                ${isOpen ? `
+                  <div class="score-card">
+                    <div class="tiny">本锅称号</div>
+                    <div class="result-title">${h(result.title)}</div>
+                    <p class="result-comment">${h(result.comment)}</p>
+                  </div>
+                  <div class="score-card">
+                    <div class="score-number">${result.darkIndex}<span>/100 黑暗指数</span></div>
+                    ${meter("黑暗指数", result.darkIndex, "dark")}
+                    ${meter("美食指数", result.foodIndex, "tasty")}
+                  </div>
+                  <div class="combo-list">
+                    ${result.matches.length
+                      ? result.matches.map(combo => `<span class="combo-tag">✨ ${h(combo.name)}</span>`).join("")
+                      : `<span class="combo-tag">🥬 暂无额外组合</span>`}
+                  </div>
+                ` : `
+                  <div class="score-card">
+                    <div class="result-title">锅盖还在</div>
+                    <p class="result-comment">现在没人知道全场到底往锅里塞了什么。房主或全员点一下，马上公开。</p>
+                    <button class="btn primary" type="button" data-action="open-pot">🍲 揭开锅盖</button>
+                  </div>
+                `}
+              </div>
+            </div>
+
+            <div>
+              <div class="panel-head" style="margin-bottom: 12px;">
+                <div>
+                  <h2>贡献清单</h2>
+                  <p>${isOpen ? "本轮所有暗中下锅记录已经公开。" : "揭锅前只显示密封状态。"}</p>
+                </div>
+              </div>
+              <div class="contrib-list">
+                ${state.players.map(player => renderContribution(player, isOpen)).join("")}
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn teal" type="button" data-action="new-round">🔁 同房再来一锅</button>
+              <button class="btn ghost" type="button" data-action="back-lobby">👥 回准备室</button>
+            </div>
+          </section>
+        `;
+      }
+
+      function renderHotpotVisual(open) {
+        const allIngredients = state.players.flatMap(player => getPlayerIngredients(player));
+        const floats = open && allIngredients.length
+          ? allIngredients.slice(0, 4).map(ingredient => ingredient.emoji)
+          : ["🥩", "🍄", "🌶️", "🍤"];
+        return `
+          <div class="hotpot-visual">
+            <div class="table" aria-hidden="true"></div>
+            <div class="pot ${open ? "open" : ""}" aria-label="${open ? "已揭开的火锅" : "盖着锅盖的火锅"}">
+              <div class="steam" aria-hidden="true"><span></span><span></span><span></span></div>
+              <div class="pot-lid" aria-hidden="true"></div>
+              <div class="broth" aria-hidden="true"></div>
+              ${floats.map(emoji => `<div class="ingredient-float" aria-hidden="true">${emoji}</div>`).join("")}
+              <div class="pot-body" aria-hidden="true"></div>
+              <div class="flame-row" aria-hidden="true"><div class="flame"></div><div class="flame"></div><div class="flame"></div></div>
+            </div>
+          </div>
+        `;
+      }
+
+      function renderRoster({ reveal }) {
+        return `
+          <ul class="roster">
+            ${state.players.map((player, index) => {
+              const ingredients = getPlayerIngredients(player);
+              let statusText = "待准备";
+              let statusClass = "waiting";
+              if (player.submitted) {
+                statusText = reveal && ingredients.length
+                  ? `贡献：${ingredients.length} 份食材`
+                  : `已下锅（${PICK_LIMIT} 份食材保密）`;
+                statusClass = "cooked";
+              } else if (player.ready) {
+                statusText = "已准备";
+                statusClass = "ready";
+              }
+              return `
+                <li class="player-row">
+                  <div class="player-name">
+                    <span>${h(player.name)}</span>
+                    ${index === 0 ? `<span class="host-tag">房主</span>` : ""}
+                  </div>
+                  <button class="status ${statusClass}" type="button" data-action="toggle-ready" data-player-id="${h(player.id)}" ${state.phase !== "lobby" ? "disabled" : ""}>${h(statusText)}</button>
+                </li>
+              `;
+            }).join("")}
+          </ul>
+        `;
+      }
+
+      function renderSelectedSlots(selectedIds) {
+        const slots = Array.from({ length: PICK_LIMIT }, (_, index) => {
+          const ingredient = getIngredient(selectedIds[index]);
+          if (!ingredient) {
+            return `
+              <div class="slot empty">
+                <span class="slot-emoji">＋</span>
+                <span class="slot-name">空槽 ${index + 1}</span>
+              </div>
+            `;
+          }
+          return `
+            <div class="slot">
+              <button class="slot-remove" type="button" data-action="remove-selected" data-index="${index}" aria-label="移除 ${h(ingredient.name)}">×</button>
+              <span class="slot-emoji">${ingredient.emoji}</span>
+              <span class="slot-name">${h(ingredient.name)}</span>
+            </div>
+          `;
+        });
+        return `<div class="slot-grid">${slots.join("")}</div>`;
+      }
+
+      function renderRandomBox(type, selectedCount) {
+        return `
+          <button class="random-box" type="button" data-action="random-pick" data-box-type="${h(type.id)}" ${selectedCount >= PICK_LIMIT ? "disabled" : ""}>
+            <span class="random-mark">?</span>
+            <strong>${h(type.name)}</strong>
+            <span>${h(type.hint)}</span>
+          </button>
+        `;
+      }
+
+      function renderIngredientPantry(selectedIds) {
+        const selectedSet = new Set(selectedIds);
+        const isFull = selectedIds.length >= PICK_LIMIT;
+        const groups = CATEGORY_ORDER
+          .map(category => [category, INGREDIENTS.filter(item => item.category === category)])
+          .filter(([, items]) => items.length);
+
+        return groups.map(([category, items]) => `
+          <section class="category-section">
+            <div class="category-title">
+              <span>${h(category)}</span>
+              <span>${items.length}</span>
+            </div>
+            <div class="ingredient-grid">
+              ${items.map(item => {
+                const selected = selectedSet.has(item.id);
+                const disabled = selected || isFull;
+                return `
+                  <button class="ingredient-pick ${selected ? "selected" : ""}" type="button" data-action="choose-ingredient" data-ingredient-id="${h(item.id)}" ${disabled ? "disabled" : ""} title="${h(item.desc)}">
+                    <span class="pick-emoji">${item.emoji}</span>
+                    <span class="pick-copy">
+                      <span class="pick-name">${h(item.name)}</span>
+                      <span class="pick-meta">${h(item.rarity)} · 黑${item.dark} / 美${item.tasty}</span>
+                    </span>
+                  </button>
+                `;
+              }).join("")}
+            </div>
+          </section>
+        `).join("");
+      }
+
+      function renderContribution(player, reveal) {
+        const ingredients = getPlayerIngredients(player);
+        if (!reveal || !ingredients.length) {
+          return `
+            <div class="contrib hidden">
+              <div class="ingredient-emoji">🔒</div>
+              <div>
+                <strong>${h(player.name)}</strong>
+                <span>${player.submitted ? `已下锅（${PICK_LIMIT} 份食材保密）` : "尚未下锅"}</span>
+              </div>
+            </div>
+          `;
+        }
+        return `
+          <div class="contrib">
+            <div class="reveal-emoji-pile">${ingredients.map(ingredient => `<span>${ingredient.emoji}</span>`).join("")}</div>
+            <div>
+              <strong>${h(player.name)} 贡献了 ${ingredients.length} 份秘密食材</strong>
+              <span>${ingredients.map(ingredient => `${ingredient.emoji} ${ingredient.name}`).join("、")}</span>
+              <div class="ingredient-list">
+                ${ingredients.map(ingredient => `<span class="ingredient-mini">${ingredient.emoji} ${h(ingredient.name)}</span>`).join("")}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      function meter(label, value, type) {
+        const safeValue = clamp(Math.round(value), 0, 100);
+        return `
+          <span class="meter">
+            <span>${h(label)} ${safeValue}</span>
+            <span class="bar ${h(type)}"><span style="width: ${safeValue}%"></span></span>
+          </span>
+        `;
+      }
+
+      function joinPlayer() {
+        if (state.players.length >= 8) {
+          showToast("本原型最多 8 人同锅，先开一局吧。");
+          return;
+        }
+        const nicknameInput = document.querySelector("#nickname");
+        const roomInput = document.querySelector("#roomInput");
+        const typedName = nicknameInput ? nicknameInput.value.trim() : "";
+        const roomValue = roomInput ? roomInput.value.trim().toUpperCase() : "";
+        const name = normalizeName(typedName || randomName());
+        if (roomValue) state.roomCode = roomValue.replace(/[^A-Z0-9]/g, "").slice(0, 8) || state.roomCode;
+
+        state.players.push({
+          id: uid("player"),
+          name,
+          ready: false,
+          submitted: false,
+          ingredientIds: [],
+          ingredientId: null
+        });
+        persist();
+        render();
+        showToast(`${name} 已加入房间 ${state.roomCode}`);
+      }
+
+      function normalizeName(name) {
+        const clean = name.replace(/\s+/g, "").slice(0, 12) || randomName();
+        const used = new Set(state.players.map(player => player.name));
+        if (!used.has(clean)) return clean;
+        let suffix = 2;
+        while (used.has(`${clean}${suffix}`)) suffix += 1;
+        return `${clean}${suffix}`.slice(0, 12);
+      }
+
+      function randomName() {
+        const base = DEFAULT_NAMES[Math.floor(Math.random() * DEFAULT_NAMES.length)];
+        return `${base}${Math.floor(Math.random() * 90 + 10)}`;
+      }
+
+      function quickJoin() {
+        const needed = Math.min(3, 8 - state.players.length);
+        if (!needed) {
+          showToast("房间已经满员。");
+          return;
+        }
+        for (let index = 0; index < needed; index += 1) {
+          state.players.push({
+            id: uid("bot"),
+            name: normalizeName(DEFAULT_NAMES[(state.players.length + index) % DEFAULT_NAMES.length]),
+            ready: false,
+            submitted: false,
+            ingredientIds: [],
+            ingredientId: null
+          });
+        }
+        persist();
+        render();
+        showToast(`已加入 ${needed} 名模拟玩家。`);
+      }
+
+      function toggleReady(playerId) {
+        const player = state.players.find(item => item.id === playerId);
+        if (!player || state.phase !== "lobby") return;
+        player.ready = !player.ready;
+        persist();
+        render();
+      }
+
+      function readyAll() {
+        state.players.forEach(player => {
+          player.ready = true;
+        });
+        persist();
+        render();
+        showToast("全员已准备，房主可以开始私密选食材。");
+      }
+
+      async function copyRoomCode() {
+        try {
+          await navigator.clipboard.writeText(state.roomCode);
+          showToast(`房间码 ${state.roomCode} 已复制。`);
+        } catch (error) {
+          showToast(`房间码：${state.roomCode}`);
+        }
+      }
+
+      function startDrawPhase() {
+        if (state.players.length < 2) {
+          showToast("至少需要 2 位玩家。");
+          return;
+        }
+        if (!state.players.every(player => player.ready)) {
+          showToast("还有玩家没准备。");
+          return;
+        }
+        state.phase = "draw";
+        state.players.forEach(player => {
+          player.submitted = false;
+          player.ingredientIds = [];
+          player.ingredientId = null;
+        });
+        state.activePlayerId = state.players[0].id;
+        state.privateGateOpen = false;
+        state.turnOptions = [];
+        state.selectedIngredientIds = [];
+        state.revealOpen = false;
+        persist();
+        render();
+      }
+
+      function openPrivateGate() {
+        const player = getActivePlayer();
+        if (!player) return;
+        state.privateGateOpen = true;
+        state.turnOptions = [];
+        state.selectedIngredientIds = [];
+        persist();
+        render();
+      }
+
+      function drawIngredient(type, used) {
+        const pool = INGREDIENTS.filter(item => type.filter(item) && !used.has(item.id));
+        const fallback = INGREDIENTS.filter(item => !used.has(item.id));
+        const candidates = pool.length ? pool : fallback;
+        const total = candidates.reduce((sum, item) => sum + (type.weight[item.rarity] || 1), 0);
+        let roll = Math.random() * total;
+        for (const item of candidates) {
+          roll -= type.weight[item.rarity] || 1;
+          if (roll <= 0) return item;
+        }
+        return candidates[candidates.length - 1];
+      }
+
+      function getCurrentSelectedIds() {
+        if (!Array.isArray(state.selectedIngredientIds)) state.selectedIngredientIds = [];
+        state.selectedIngredientIds = state.selectedIngredientIds
+          .filter(id => getIngredient(id))
+          .filter((id, index, list) => list.indexOf(id) === index)
+          .slice(0, PICK_LIMIT);
+        return state.selectedIngredientIds;
+      }
+
+      function chooseIngredient(ingredientId) {
+        if (!state.privateGateOpen) return;
+        const ingredient = getIngredient(ingredientId);
+        const selectedIds = getCurrentSelectedIds();
+        if (!ingredient || selectedIds.includes(ingredient.id)) return;
+        if (selectedIds.length >= PICK_LIMIT) {
+          showToast(`每位玩家最多选择 ${PICK_LIMIT} 个食材。`);
+          return;
+        }
+        selectedIds.push(ingredient.id);
+        persist();
+        render();
+      }
+
+      function removeSelectedIngredient(index) {
+        if (!state.privateGateOpen) return;
+        const selectedIds = getCurrentSelectedIds();
+        if (!Number.isInteger(index) || index < 0 || index >= selectedIds.length) return;
+        selectedIds.splice(index, 1);
+        persist();
+        render();
+      }
+
+      function randomPick(boxTypeId) {
+        if (!state.privateGateOpen) return;
+        const selectedIds = getCurrentSelectedIds();
+        if (selectedIds.length >= PICK_LIMIT) return;
+        const type = BOX_TYPES.find(item => item.id === boxTypeId) || BOX_TYPES[BOX_TYPES.length - 1];
+        const used = new Set(selectedIds);
+        const ingredient = drawIngredient(type, used);
+        if (!ingredient) {
+          showToast("这个盲盒已经没有可选食材了。");
+          return;
+        }
+        selectedIds.push(ingredient.id);
+        persist();
+        render();
+        showToast(`${type.name} 开出了：${ingredient.emoji} ${ingredient.name}`);
+      }
+
+      function fillRandomPicks() {
+        if (!state.privateGateOpen) return;
+        const selectedIds = getCurrentSelectedIds();
+        while (selectedIds.length < PICK_LIMIT) {
+          const type = BOX_TYPES[Math.floor(Math.random() * BOX_TYPES.length)];
+          const ingredient = drawIngredient(type, new Set(selectedIds));
+          if (!ingredient) break;
+          selectedIds.push(ingredient.id);
+        }
+        persist();
+        render();
+      }
+
+      function submitSecretIngredient() {
+        const player = getActivePlayer();
+        const selectedIds = getCurrentSelectedIds();
+        if (!player || selectedIds.length !== PICK_LIMIT) {
+          showToast(`请先选满 ${PICK_LIMIT} 个食材。`);
+          return;
+        }
+
+        player.submitted = true;
+        player.ingredientIds = [...selectedIds];
+        player.ingredientId = selectedIds[0] || null;
+        state.privateGateOpen = false;
+        state.turnOptions = [];
+        state.selectedIngredientIds = [];
+
+        const next = state.players.find(item => !item.submitted);
+        if (next) {
+          state.activePlayerId = next.id;
+          showToast(`${player.name} 的 ${PICK_LIMIT} 份食材已偷偷溜进锅里。请传给 ${next.name}。`);
+        } else {
+          state.phase = "reveal";
+          state.activePlayerId = null;
+          state.revealOpen = false;
+          showToast("所有食材都进锅了，准备揭锅。");
+        }
+
+        persist();
+        render();
+      }
+
+      function getActivePlayer() {
+        return state.players.find(player => player.id === state.activePlayerId) || state.players.find(player => !player.submitted);
+      }
+
+      function getPlayerIngredientIds(player) {
+        const ids = Array.isArray(player.ingredientIds)
+          ? player.ingredientIds
+          : player.ingredientId
+            ? [player.ingredientId]
+            : [];
+        return ids.filter(id => getIngredient(id)).slice(0, PICK_LIMIT);
+      }
+
+      function getPlayerIngredients(player) {
+        return getPlayerIngredientIds(player).map(id => getIngredient(id)).filter(Boolean);
+      }
+
+      function submittedCount() {
+        return state.players.filter(player => player.submitted).length;
+      }
+
+      function openPot() {
+        state.revealOpen = true;
+        persist();
+        render();
+        showToast("锅盖已揭开，全员公开处刑。");
+      }
+
+      function evaluateHotpot() {
+        const ingredients = state.players.flatMap(player => getPlayerIngredients(player));
+        if (!ingredients.length) {
+          return { darkIndex: 0, foodIndex: 0, title: "空锅观察员", comment: "锅里还没有任何食材。", matches: [] };
+        }
+
+        const context = buildComboContext(ingredients);
+        const matches = COMBO_RULES.filter(rule => comboMatches(rule, context));
+        const averageDark = ingredients.reduce((sum, item) => sum + item.dark, 0) / ingredients.length;
+        const averageTasty = ingredients.reduce((sum, item) => sum + item.tasty, 0) / ingredients.length;
+        const darkDelta = matches.reduce((sum, rule) => sum + rule.darkDelta, 0);
+        const tastyDelta = matches.reduce((sum, rule) => sum + rule.tastyDelta, 0);
+        const darkIndex = clamp(Math.round(averageDark * 10 + darkDelta), 0, 100);
+        const foodIndex = clamp(Math.round(averageTasty * 10 + tastyDelta), 0, 100);
+        const title = pickTitle(darkIndex, foodIndex, matches);
+        const comboComment = matches.map(rule => rule.comment).slice(0, 2).join(" ");
+        const comment = comboComment || (darkIndex > foodIndex
+          ? "这锅有明显的冒险精神，建议先拍照留证，再决定谁第一筷。"
+          : "意外地能吃，甚至可能让人怀疑大家是不是串通好了。");
+
+        return { darkIndex, foodIndex, title, comment, matches };
+      }
+
+      function buildComboContext(ingredients) {
+        const ids = new Set(ingredients.map(item => item.id));
+        const tags = new Set(ingredients.flatMap(item => item.tags));
+        const countTag = tag => ingredients.filter(item => item.tags.includes(tag)).length;
+        return {
+          ids,
+          tags,
+          bizarre: countTag("bizarre"),
+          smelly: countTag("smelly"),
+          meat: countTag("meat")
+        };
+      }
+
+      function comboMatches(rule, context) {
+        if (rule.allTags && !rule.allTags.every(tag => context.tags.has(tag))) return false;
+        if (rule.anyIds && !rule.anyIds.some(id => context.ids.has(id))) return false;
+        if (Number.isFinite(rule.minBizarre) && context.bizarre < rule.minBizarre) return false;
+        if (Number.isFinite(rule.maxBizarre) && context.bizarre > rule.maxBizarre) return false;
+        if (Number.isFinite(rule.minSmelly) && context.smelly < rule.minSmelly) return false;
+        if (Number.isFinite(rule.maxMeat) && context.meat > rule.maxMeat) return false;
+        return true;
+      }
+
+      function pickTitle(darkIndex, foodIndex, matches) {
+        if (matches.some(rule => rule.name === "黑暗料理王入场") || darkIndex >= 82) return "拉肚子预警·黑暗料理王";
+        if (darkIndex >= 68) return "锅盖一开·全桌沉默";
+        if (foodIndex >= 82 && darkIndex <= 35) return "仙气飘飘豪华锅";
+        if (matches.some(rule => rule.name === "贵气救场")) return "钞能力救回一锅";
+        if (darkIndex > foodIndex) return "可以吃但先别急锅";
+        if (foodIndex >= 70) return "意外靠谱快乐锅";
+        return "命运中庸鸳鸯锅";
+      }
+
+      function newRoundSamePlayers() {
+        state.phase = "lobby";
+        state.players.forEach(player => {
+          player.ready = false;
+          player.submitted = false;
+          player.ingredientIds = [];
+          player.ingredientId = null;
+        });
+        state.activePlayerId = null;
+        state.privateGateOpen = false;
+        state.turnOptions = [];
+        state.selectedIngredientIds = [];
+        state.revealOpen = false;
+        persist();
+        render();
+        showToast("玩家保留，准备再来一锅。");
+      }
+
+      function backToLobby() {
+        state.phase = "lobby";
+        state.players.forEach(player => {
+          player.ready = false;
+          player.submitted = false;
+          player.ingredientIds = [];
+          player.ingredientId = null;
+        });
+        state.activePlayerId = null;
+        state.privateGateOpen = false;
+        state.turnOptions = [];
+        state.selectedIngredientIds = [];
+        state.revealOpen = false;
+        persist();
+        render();
+      }
+
+      function resetRoom() {
+        const confirmed = confirm("确定重置本地房间吗？所有玩家和本轮食材都会清空。");
+        if (!confirmed) return;
+        state = defaultState();
+        persist();
+        render();
+        showToast("本地房间已重置。");
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2400);
+      }
+    })();
+  </script>
+</body>
+</html>
