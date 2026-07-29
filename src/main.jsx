@@ -1,298 +1,289 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { Component, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./styles.css";
 
-const positiveFoods = [
-  { name: "榴莲", tag: "臭", base: 13, emoji: "🟡", quip: "它笑得很大声。" },
-  { name: "折耳根", tag: "怪", base: 9, emoji: "🌿", quip: "灵魂开始拐弯。" },
-  { name: "螺蛳粉", tag: "臭", base: 12, emoji: "🍜", quip: "整条街都听见了。" },
-  { name: "臭豆腐", tag: "臭", base: 11, emoji: "🧊", quip: "方方正正，很有意见。" },
-  { name: "鲱鱼罐头", tag: "臭", base: 15, emoji: "🥫", quip: "盖子打开的一刻，锅沉默了。" },
-  { name: "皮蛋", tag: "怪", base: 7, emoji: "🥚", quip: "像一枚深夜谜题。" },
-  { name: "辣条", tag: "辣", base: 8, emoji: "🌶️", quip: "小卖部风味直达锅底。" },
-  { name: "芥末", tag: "辣", base: 10, emoji: "🟩", quip: "鼻腔先举白旗。" },
-  { name: "蓝纹奶酪", tag: "臭", base: 11, emoji: "🧀", quip: "优雅地添乱。" },
-  { name: "纳豆", tag: "怪", base: 9, emoji: "🫘", quip: "丝丝入扣，黏住良心。" },
-  { name: "苦瓜", tag: "怪", base: 6, emoji: "🥒", quip: "成年人专属惩罚。" },
-  { name: "香菜", tag: "怪", base: 6, emoji: "☘️", quip: "有人欢呼，有人离席。" },
-  { name: "板蓝根", tag: "怪", base: 12, emoji: "🧃", quip: "药柜决定参赛。" },
-  { name: "藿香正气水", tag: "怪", base: 14, emoji: "🧪", quip: "锅开始反思人生。" },
-  { name: "风油精", tag: "怪", base: 15, emoji: "💧", quip: "清凉，但不清白。" },
-  { name: "花露水", tag: "怪", base: 15, emoji: "🧴", quip: "夏夜被端上桌。" },
-  { name: "咖啡", tag: "苦", base: 7, emoji: "☕", quip: "这锅今晚不用睡了。" },
-  { name: "可乐", tag: "甜", base: 7, emoji: "🥤", quip: "气泡和气泡结拜。" },
-  { name: "泡面", tag: "怪", base: 6, emoji: "🍥", quip: "宿舍风云再起。" },
-  { name: "一整块火锅底料", tag: "辣", base: 14, emoji: "🧱", quip: "油光闪闪的决心。" },
-  { name: "月饼", tag: "甜", base: 10, emoji: "🥮", quip: "中秋提前入锅。" },
-  { name: "汤圆", tag: "甜", base: 8, emoji: "⚪", quip: "软糯地制造混乱。" },
-  { name: "冰淇淋", tag: "冰", base: 12, emoji: "🍦", quip: "冷热在锅里谈判失败。" },
-  { name: "老干妈", tag: "辣", base: 13, emoji: "🔥", quip: "油辣子有自己的节奏。" },
-  { name: "珍珠奶茶", tag: "甜", base: 10, emoji: "🧋", quip: "珍珠沉底，罪证确凿。" },
-  { name: "一整只鸡", tag: "怪", base: 9, emoji: "🍗", quip: "场面突然认真。" }
+const RELAY_TARGET = 5;
+const RELAY_PARAM = "pot";
+const PLAYER_KEY = "one_spoon_player";
+const PLAYED_KEY = "one_spoon_played_pots";
+
+const GOALS = [
+  {
+    id: "survive",
+    title: "活过5个人",
+    desc: "别让这口锅提前失控。",
+    success: "目标达成：这锅真的撑过了5位共犯。",
+    fail: "目标失败：这锅没撑到第5位共犯。"
+  },
+  {
+    id: "pure",
+    title: "保持清汤",
+    desc: "谁添乱，谁就会被报告记住。",
+    success: "目标达成：清汤守住了最后一刻。",
+    fail: "目标失败：清汤已经被改写。"
+  },
+  {
+    id: "heat",
+    title: "烧到100度",
+    desc: "大家一起把火候推上去。",
+    success: "目标达成：火候突破100度。",
+    fail: "目标失败：火候没有冲上去。"
+  },
+  {
+    id: "free",
+    title: "随便搞",
+    desc: "锅主只想看这口锅会变成什么样。",
+    success: "目标达成：这锅贡献了足够多的热闹。",
+    fail: "目标达成：看戏的人已经满意。"
+  }
 ];
 
-const remedies = [
-  { name: "一瓢清水", tag: "清", base: -14, emoji: "💦", quip: "锅松了一口长气。" },
-  { name: "一勺盐", tag: "咸", base: -10, emoji: "🧂", quip: "秩序回来了半秒。" },
-  { name: "一把理性", tag: "清", base: -18, emoji: "🧠", quip: "全场最不合群的一勺。" },
-  { name: "高汤", tag: "清", base: -12, emoji: "🍲", quip: "老派厨德救场。" },
-  { name: "几片姜", tag: "清", base: -9, emoji: "🫚", quip: "一片姜压住一片慌。" },
-  { name: "冰水", tag: "冰", base: -16, emoji: "🧊", quip: "火气被摁回锅里。" },
-  { name: "酸奶", tag: "清", base: -13, emoji: "🥛", quip: "辣味开始讲道理。" },
-  { name: "灭火器", tag: "清", base: -20, emoji: "🧯", quip: "厨房秩序强制上线。" },
-  { name: "解药", tag: "清", base: -18, emoji: "💊", quip: "太正经，显得可疑。" },
-  { name: "柠檬", tag: "酸", base: -11, emoji: "🍋", quip: "臭味被酸醒了。" }
+const HELP_FOODS = [
+  { name: "清汤", tag: "清", emoji: "🍲", integrity: 18, heat: -4, quip: "锅松了一口气。" },
+  { name: "冰块", tag: "冰", emoji: "🧊", integrity: 12, heat: -18, quip: "火气被压住了。" },
+  { name: "一勺盐", tag: "咸", emoji: "🧂", integrity: 10, heat: 4, quip: "秩序短暂回来了。" },
+  { name: "雪梨汤", tag: "清", emoji: "🥛", integrity: 22, heat: -8, quip: "温柔地救了一下场。" }
 ];
 
-const responseCards = {
-  辣: [
-    { name: "冰水", tag: "冰", base: -16, emoji: "🧊", quip: "专门来灭火。" },
-    { name: "酸奶", tag: "清", base: -13, emoji: "🥛", quip: "给辣味递台阶。" },
-    { name: "灭火器", tag: "清", base: -20, emoji: "🧯", quip: "不讲情面地救场。" }
-  ],
-  甜: [{ name: "一勺盐", tag: "咸", base: -10, emoji: "🧂", quip: "甜味被当场教育。" }],
-  臭: [
-    { name: "香菜", tag: "怪", base: 6, emoji: "☘️", quip: "以香制胜，也可能更乱。" },
-    { name: "柠檬", tag: "酸", base: -11, emoji: "🍋", quip: "酸光一闪，空气清醒。" }
-  ],
-  冰: [{ name: "老干妈", tag: "辣", base: 13, emoji: "🔥", quip: "冷热互相不服。" }],
-  怪: [{ name: "一把理性", tag: "清", base: -18, emoji: "🧠", quip: "它试图结束这场闹剧。" }]
-};
-
-const collectiveCharges = [
-  "一锅乱炖罪",
-  "蓄意谋杀味蕾罪",
-  "跨界食材非法同居罪",
-  "集体投毒（未遂）罪",
-  "深夜放毒罪",
-  "味觉恐怖主义罪",
-  "反人类烹饪罪",
-  "食材跨界走私罪"
+const MESS_FOODS = [
+  { name: "辣椒", tag: "辣", emoji: "🌶️", integrity: -28, heat: 30, quip: "火候突然上头。" },
+  { name: "榴莲", tag: "怪", emoji: "🟡", integrity: -34, heat: 8, quip: "空气开始有意见。" },
+  { name: "折耳根", tag: "怪", emoji: "🌿", integrity: -24, heat: 12, quip: "灵魂拐了个弯。" },
+  { name: "爆辣包", tag: "辣", emoji: "🔥", integrity: -65, heat: 45, quip: "这一下，全锅都记住了。" }
 ];
 
-const aiNames = ["锅巴", "红油", "花椒", "漏勺", "夜宵局", "铁锅侠"];
-const potLines = [
-  "咕嘟……（假装什么都没发生）",
-  "这锅，谁煮的？反正不是我。",
-  "离谱度飙升！锅要溢了！",
-  "锅沿开始说胡话。",
-  "汤底短暂失去职业素养。"
+const ALL_FOODS = [...HELP_FOODS, ...MESS_FOODS];
+const INITIAL_FOODS = [
+  { name: "豆皮", tag: "底", emoji: "🥬" },
+  { name: "牛肉卷", tag: "底", emoji: "🥩" },
+  { name: "菌菇", tag: "底", emoji: "🍄" },
+  { name: "鱼丸", tag: "底", emoji: "🍡" }
 ];
-
-const initialFoods = ["豆皮", "牛肉卷", "菌菇", "鱼丸", "宽粉", "青菜", "午餐肉"];
-const allFoods = [...positiveFoods, ...remedies];
 
 const pick = (items) => items[Math.floor(Math.random() * items.length)];
-const clamp = (num, min, max) => Math.max(min, Math.min(max, num));
-const rollDelta = (food) => {
-  if (food.base < 0) return food.base - Math.floor(Math.random() * 5);
-  return food.base + Math.floor(Math.random() * 4);
-};
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const makeId = () => Math.random().toString(36).slice(2, 10);
 
-function foodByName(name) {
-  return allFoods.find((food) => food.name === name) || null;
-}
-
-function makeEvent(text, tone = "hot") {
-  return { id: makeId(), text, tone, time: new Date().toLocaleTimeString("zh-CN", { hour12: false }) };
-}
-
-function buildDeck(lastTag) {
-  const deck = [];
-  if (lastTag && responseCards[lastTag]) deck.push(pick(responseCards[lastTag]));
-  while (deck.length < 3) {
-    const source = Math.random() < 0.8 ? positiveFoods : remedies;
-    const candidate = pick(source);
-    if (!deck.some((item) => item.name === candidate.name)) deck.push(candidate);
+function getPlayerId() {
+  try {
+    let id = localStorage.getItem(PLAYER_KEY);
+    if (!id) {
+      id = `p_${makeId()}_${Date.now().toString(36)}`;
+      localStorage.setItem(PLAYER_KEY, id);
+    }
+    return id;
+  } catch {
+    return `p_${makeId()}`;
   }
-  return deck.sort(() => Math.random() - 0.5);
 }
 
-function potMood(score, stopped, revealed) {
-  if (revealed || score >= 100) return "revealed";
-  if (stopped) return "stopped";
-  if (score >= 85) return "warning";
-  if (score >= 60) return "angry";
-  if (score >= 30) return "strange";
+function playedPots() {
+  try {
+    return JSON.parse(localStorage.getItem(PLAYED_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function markPlayed(seed) {
+  try {
+    const played = playedPots();
+    played[seed] = true;
+    localStorage.setItem(PLAYED_KEY, JSON.stringify(played));
+  } catch {
+    return null;
+  }
+}
+
+function foodByName(name) {
+  return ALL_FOODS.find((food) => food.name === name) || null;
+}
+
+function goalById(id) {
+  return GOALS.find((goal) => goal.id === id) || GOALS[0];
+}
+
+function encodePot(pot) {
+  return JSON.stringify({
+    v: 3,
+    s: pot.seed,
+    g: pot.goal,
+    h: pot.history.map((item) => ({
+      n: item.name,
+      side: item.side,
+      i: item.integrity,
+      h: item.heat,
+      a: item.actor
+    }))
+  });
+}
+
+function decodePot(raw) {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    const history = Array.isArray(parsed.h) ? parsed.h : [];
+    return {
+      seed: typeof parsed.s === "string" ? parsed.s : makeId(),
+      goal: goalById(parsed.g).id,
+      history: history
+        .map((entry, index) => {
+          const food = foodByName(entry.n);
+          if (!food) return null;
+          return {
+            ...food,
+            id: makeId(),
+            side: entry.side === "help" ? "help" : "mess",
+            integrity: clamp(Number(entry.i) || food.integrity, -80, 30),
+            heat: clamp(Number(entry.h) || food.heat, -30, 60),
+            actor: typeof entry.a === "string" ? entry.a : `共犯#${index + 1}`
+          };
+        })
+        .filter(Boolean)
+        .slice(0, RELAY_TARGET)
+    };
+  } catch {
+    return null;
+  }
+}
+
+function summarizePot(pot) {
+  const integrity = clamp(100 + pot.history.reduce((total, item) => total + item.integrity, 0), 0, 130);
+  const heat = clamp(20 + pot.history.reduce((total, item) => total + item.heat, 0), 0, 130);
+  const count = pot.history.length;
+  const helpers = pot.history.filter((item) => item.side === "help").length;
+  const messers = pot.history.filter((item) => item.side === "mess").length;
+  const polluted = pot.goal === "pure" && pot.history.some((item) => item.side === "mess");
+  const complete =
+    pot.goal === "survive" ? count >= RELAY_TARGET && integrity > 0 :
+    pot.goal === "pure" ? count >= RELAY_TARGET && !polluted && integrity > 0 :
+    pot.goal === "heat" ? heat >= 100 && integrity > 0 :
+    pot.goal === "free" ? count >= RELAY_TARGET || integrity <= 0 :
+    false;
+  const failed =
+    pot.goal === "survive" ? integrity <= 0 :
+    pot.goal === "pure" ? polluted || integrity <= 0 :
+    pot.goal === "heat" ? integrity <= 0 || count >= RELAY_TARGET :
+    false;
+  const ended = complete || failed || count >= RELAY_TARGET || integrity <= 0;
+  const crucial = [...pot.history].sort((a, b) => a.integrity - b.integrity)[0] || null;
+  return { integrity, heat, count, helpers, messers, polluted, complete, failed, ended, crucial };
+}
+
+function potMood(summary) {
+  if (summary.ended && summary.integrity <= 0) return "revealed";
+  if (summary.ended) return "stopped";
+  if (summary.integrity <= 30 || summary.heat >= 100) return "warning";
+  if (summary.integrity <= 55 || summary.heat >= 75) return "angry";
+  if (summary.count > 0) return "strange";
   return "calm";
 }
 
-function chargeFor(foods) {
-  const names = foods.map((item) => item.name);
-  const hasHarm = names.some((name) => ["榴莲", "鲱鱼罐头", "臭豆腐", "老干妈", "芥末", "风油精", "花露水", "板蓝根"].includes(name));
-  const hasHelp = names.some((name) => ["一瓢清水", "一勺盐", "解药", "高汤", "冰水", "一把理性", "灭火器"].includes(name));
-  const charges = [];
-  if (hasHarm && hasHelp) charges.push("反复横跳的共犯");
-  if (names.some((name) => ["榴莲", "鲱鱼罐头", "臭豆腐"].includes(name))) charges.push("生化武器携带者");
-  if (hasHelp) charges.push(pick(["救锅英雄", "卧底清道夫"]));
-  if (names.some((name) => ["辣条", "老干妈", "芥末", "一整块火锅底料"].includes(name))) charges.push("纵火犯");
-  if (names.some((name) => ["冰淇淋", "汤圆", "月饼", "珍珠奶茶"].includes(name))) charges.push("甜品走私犯");
-  if (names.some((name) => ["风油精", "花露水", "板蓝根", "藿香正气水"].includes(name))) charges.push("投毒惯犯");
-  return charges.slice(0, 3).join(" / ") || "围观不报备罪";
+function makeShareUrl(pot) {
+  const url = new URL(window.location.href);
+  url.search = "";
+  url.searchParams.set(RELAY_PARAM, encodePot(pot));
+  return url.toString();
 }
 
-function storyVerb(entry, previous) {
-  if (!previous) return entry.delta < 0 ? "救场" : "起锅";
-  if (entry.delta < 0) return "回拉";
-  if (entry.tag === previous.tag) return "加码";
-  if (previous.delta < 0 && entry.delta > 0) return "反手添乱";
-  return pick(["挑衅", "火上浇油", "同归于尽", "改写汤底"]);
+function ErrorFallback() {
+  return (
+    <main className="app error-app">
+      <section className="error-panel" role="alert">
+        <h1>一人一勺</h1>
+        <p>哎呀，出错了，请重启试试吧~</p>
+      </section>
+    </main>
+  );
+}
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    console.error("Render error", error);
+  }
+
+  render() {
+    return this.state.hasError ? <ErrorFallback /> : this.props.children;
+  }
 }
 
 function App() {
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const seeded = useMemo(() => {
+  const initialPot = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
-    const mine = params.get("mine");
-    const from = params.get("from") || "匿名共犯";
-    return { mine, from };
+    return decodePot(params.get(RELAY_PARAM));
   }, []);
 
-  const mineFood = seeded.mine ? foodByName(seeded.mine) : null;
-  const mineDelta = mineFood ? rollDelta(mineFood) : 0;
-  const [score, setScore] = useState(() => clamp(20 + Math.floor(Math.random() * 41) + Math.max(0, mineDelta), 0, 96));
-  const [online, setOnline] = useState(() => 360 + Math.floor(Math.random() * 180));
-  const [events, setEvents] = useState(() => {
-    const starter = [
-      makeEvent(`匿名共犯 #${200 + Math.floor(Math.random() * 700)} 偷偷加了 ${pick(positiveFoods).name}`),
-      makeEvent(`AI 共犯·${pick(aiNames)} 加了 ${pick(positiveFoods).name}`),
-      makeEvent(pick(potLines), "pot")
-    ];
-    if (mineFood) {
-      starter.unshift(makeEvent(`一位匿名共犯 在你来之前就加了 ${mineFood.name}`, mineFood.base < 0 ? "cool" : "hot"));
-    }
-    return starter;
-  });
-  const [history, setHistory] = useState(() => {
-    const starter = initialFoods.slice(0, 4).map((name, index) => ({
-      id: makeId(),
-      name,
-      emoji: ["🥬", "🥩", "🍄", "🍡"][index],
-      tag: "底",
-      delta: 0,
-      actor: "锅底",
-      mine: false
-    }));
-    return mineFood
-      ? [...starter, { ...mineFood, id: makeId(), delta: mineDelta, actor: seeded.from, mine: false }]
-      : starter;
-  });
-  const [userFoods, setUserFoods] = useState([]);
-  const [drawOpen, setDrawOpen] = useState(false);
-  const [drawn, setDrawn] = useState(null);
-  const [deck, setDeck] = useState([]);
-  const [swapped, setSwapped] = useState(false);
-  const [stopped, setStopped] = useState(false);
-  const [impact, setImpact] = useState(null);
-  const [shareFood, setShareFood] = useState(allFoods[0].name);
+  const [fatalError, setFatalError] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState(GOALS[0].id);
+  const [pot, setPot] = useState(initialPot);
+  const [justCreated, setJustCreated] = useState(false);
+  const [playerId] = useState(getPlayerId);
   const [copied, setCopied] = useState(false);
-  const lastTag = history.filter((item) => item.tag !== "底").at(-1)?.tag || null;
-  const lastThreeHeavy = useRef([]);
-  const mood = potMood(score, stopped, score >= 100);
-  const isRevealed = score >= 100;
-  const posterCharge = useMemo(() => (isRevealed ? pick(collectiveCharges) : ""), [isRevealed]);
+  const [impact, setImpact] = useState(null);
+  const [flash, setFlash] = useState(false);
+  const summary = pot ? summarizePot(pot) : null;
+  const goal = pot ? goalById(pot.goal) : goalById(selectedGoal);
+  const hasPlayed = pot ? Boolean(playedPots()[pot.seed]) : false;
+  const canAct = pot && !summary.ended && !hasPlayed && !justCreated;
+  const shareUrl = pot ? makeShareUrl(pot) : "";
 
-  const addEvent = (event) => {
-    setEvents((current) => [event, ...current].slice(0, 8));
+  useEffect(() => {
+    const showFallback = () => setFatalError(true);
+    window.addEventListener("error", showFallback);
+    window.addEventListener("unhandledrejection", showFallback);
+    return () => {
+      window.removeEventListener("error", showFallback);
+      window.removeEventListener("unhandledrejection", showFallback);
+    };
+  }, []);
+
+  if (fatalError) return <ErrorFallback />;
+
+  const startPot = () => {
+    const nextPot = { seed: makeId(), goal: selectedGoal, history: [] };
+    setPot(nextPot);
+    setJustCreated(true);
+    window.history.replaceState(null, "", `?${RELAY_PARAM}=${encodeURIComponent(encodePot(nextPot))}`);
   };
 
-  const addIngredient = (food, actor = "你", mine = false, forcedDelta, customText) => {
-    const delta = forcedDelta ?? rollDelta(food);
-    const nextItem = { ...food, id: makeId(), delta, actor, mine };
-    setHistory((current) => [...current, nextItem]);
-    setScore((current) => clamp(current + delta, 0, 100));
-    if (mine) setUserFoods((current) => [...current, nextItem]);
-
-    addEvent(
-      delta < 0
-        ? makeEvent("有人往回拉了一勺，锅暂时安全了。", "cool")
-        : makeEvent(customText || `${actor} 加了 ${food.name}（${delta > 0 ? "+" : ""}${delta}）`, "hot")
-    );
-
-    if (delta < 0) {
-      setStopped(false);
-      lastThreeHeavy.current = [];
-      return;
+  const addAction = (side) => {
+    if (!canAct) return;
+    const food = side === "help" ? pick(HELP_FOODS) : pick(MESS_FOODS);
+    const nextEntry = {
+      ...food,
+      id: makeId(),
+      side,
+      actor: `共犯#${summary.count + 1}`
+    };
+    const nextPot = { ...pot, history: [...pot.history, nextEntry] };
+    setImpact(nextEntry);
+    setPot(nextPot);
+    markPlayed(pot.seed, playerId);
+    window.history.replaceState(null, "", `?${RELAY_PARAM}=${encodeURIComponent(encodePot(nextPot))}`);
+    if (nextEntry.integrity <= -60 || summarizePot(nextPot).integrity <= 0) {
+      setFlash(true);
+      setTimeout(() => setFlash(false), 1300);
     }
-
-    const heavy = ["辣", "臭", "怪"].includes(food.tag);
-    lastThreeHeavy.current = [...lastThreeHeavy.current, heavy].slice(-3);
-    if (lastThreeHeavy.current.length === 3 && lastThreeHeavy.current.every(Boolean)) {
-      setStopped(true);
-      addEvent(makeEvent("本锅拒绝再煮，除非来个救锅英雄。", "danger"));
-    }
+    setTimeout(() => setImpact(null), 1100);
   };
-
-  const openDraw = () => {
-    const nextDeck = stopped ? [...remedies].sort(() => Math.random() - 0.5).slice(0, 3) : buildDeck(lastTag);
-    setDeck(nextDeck);
-    setDrawn(null);
-    setSwapped(false);
-    setDrawOpen(true);
-  };
-
-  const revealDraw = () => {
-    setDrawn(pick(deck));
-  };
-
-  const swapSpoon = () => {
-    const choices = buildDeck(lastTag).filter((item) => item.name !== drawn?.name);
-    setDrawn(pick(choices));
-    setSwapped(true);
-  };
-
-  const throwIntoPot = () => {
-    if (!drawn) return;
-    setImpact(drawn);
-    setDrawOpen(false);
-    setTimeout(() => {
-      addIngredient(drawn, "你", true);
-      if (Math.random() < 0.15 && score < 100) {
-        const revenge = pick(positiveFoods.filter((item) => ["怪", "臭"].includes(item.tag)));
-        setTimeout(() => addIngredient(revenge, "锅", false, undefined, `锅 偷偷加了 ${revenge.name}（它记仇了）`), 520);
-      }
-    }, reducedMotion ? 0 : 620);
-    setTimeout(() => setImpact(null), 1300);
-  };
-
-  const reset = () => {
-    const nextScore = 20 + Math.floor(Math.random() * 41);
-    setScore(nextScore);
-    setHistory(
-      initialFoods.slice(0, 4).map((name, index) => ({
-        id: makeId(),
-        name,
-        emoji: ["🥬", "🥩", "🍄", "🍡"][index],
-        tag: "底",
-        delta: 0,
-        actor: "锅底",
-        mine: false
-      }))
-    );
-    setUserFoods([]);
-    setStopped(false);
-    setEvents([
-      makeEvent(`匿名共犯 #${200 + Math.floor(Math.random() * 700)} 偷偷加了 ${pick(positiveFoods).name}`),
-      makeEvent(`AI 共犯·${pick(aiNames)} 加了 ${pick(positiveFoods).name}`),
-      makeEvent(pick(potLines), "pot")
-    ]);
-    lastThreeHeavy.current = [];
-    setCopied(false);
-  };
-
-  const shareUrl = useMemo(() => {
-    const url = new URL(window.location.href);
-    url.searchParams.set("mine", shareFood);
-    url.searchParams.set("from", `共犯${100 + Math.floor(online / 3)}`);
-    return url.toString();
-  }, [shareFood, online]);
 
   const share = async () => {
     setCopied(true);
+    const text = summary?.ended
+      ? `这口锅出结局了：${goal.title}。`
+      : `这口锅传到第 ${summary.count} 勺了，轮到你选帮还是添乱。`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: "一人一勺", text: "我在锅里留了一勺，敢来吗？", url: shareUrl });
+        await navigator.share({ title: "一人一勺", text, url: shareUrl });
       } else {
         await navigator.clipboard.writeText(shareUrl);
       }
@@ -302,157 +293,142 @@ function App() {
     setTimeout(() => setCopied(false), 1600);
   };
 
-  useEffect(() => {
-    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(motionQuery.matches);
-    const listener = (event) => setReducedMotion(event.matches);
-    motionQuery.addEventListener?.("change", listener);
-    return () => motionQuery.removeEventListener?.("change", listener);
-  }, []);
+  const reset = () => {
+    setPot(null);
+    setJustCreated(false);
+    setCopied(false);
+    setImpact(null);
+    window.history.replaceState(null, "", window.location.pathname);
+  };
 
-  useEffect(() => {
-    const tick = () => {
-      const delay = 2000 + Math.floor(Math.random() * 2000);
-      return setTimeout(() => {
-        const ai = Math.random() < 0.35;
-        const food = Math.random() < 0.82 ? pick(positiveFoods) : pick(remedies);
-        addEvent(
-          makeEvent(
-            ai
-              ? `AI 共犯·${pick(aiNames)} 加了 ${food.name}`
-              : `匿名共犯 #${100 + Math.floor(Math.random() * 900)} 偷偷加了 ${food.name}`,
-            food.base < 0 ? "cool" : "hot"
-          )
-        );
-        if (Math.random() < 0.32 && !isRevealed) {
-          setScore((current) => clamp(current + Math.round(food.base / 3), 0, 99));
-        }
-      }, delay);
-    };
-    let timer = tick();
-    return () => clearTimeout(timer);
-  }, [events, isRevealed]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setOnline((current) => clamp(current + Math.floor(Math.random() * 7) - 2, 280, 780));
-    }, 2600);
-    return () => clearInterval(timer);
-  }, []);
-
-  const story = history
-    .filter((item) => item.tag !== "底")
-    .map((item, index, list) => `第${index + 1}勺 ${storyVerb(item, list[index - 1])}（${item.name}） ${item.delta > 0 ? "+" : ""}${item.delta}`);
+  if (!pot) {
+    return (
+      <main className="app">
+        <Ambient />
+        <section className="create-screen">
+          <p className="eyebrow">击鼓传锅</p>
+          <h1>一人一勺</h1>
+          <p className="subtitle">一个人立目标，一群人决定它成不成。</p>
+          <div className="goal-list">
+            {GOALS.map((item) => (
+              <button className={`goal-card ${selectedGoal === item.id ? "active" : ""}`} key={item.id} onClick={() => setSelectedGoal(item.id)}>
+                <strong>{item.title}</strong>
+                <span>{item.desc}</span>
+              </button>
+            ))}
+          </div>
+          <button className="primary-action start-action" onClick={startPot}>开锅</button>
+        </section>
+      </main>
+    );
+  }
 
   return (
-    <main className={`app mood-${mood}`}>
+    <main className={`app mood-${potMood(summary)} ${flash ? "fatal-flash" : ""}`}>
       <Ambient />
       <header className="topbar">
         <div>
-          <p className="eyebrow">深夜共享锅</p>
+          <p className="eyebrow">锅主的目标</p>
           <h1>一人一勺</h1>
-          <p className="subtitle">这锅，谁煮的？</p>
+          <p className="subtitle">{goal.title}</p>
         </div>
-        <div className="online" aria-label={`当前在线共犯 ${online} 人`}>
+        <div className="online" aria-label={`当前进度 ${summary.count}/${RELAY_TARGET}`}>
           <span aria-hidden="true">◎</span>
-          <span>{online}</span>
+          <span>{summary.count}/{RELAY_TARGET}</span>
         </div>
       </header>
 
-      <section className="game-shell" aria-label="共享火锅游戏">
-        <aside className="feed" aria-live="polite">
-          <div className="feed-title">
-            <span>共犯动态</span>
-            <span aria-hidden="true">✦</span>
-          </div>
-          {events.map((event) => (
-              <div className={`feed-item ${event.tone}`} key={event.id}>
-                <span>{event.text}</span>
-                <small>{event.time}</small>
-              </div>
-          ))}
-        </aside>
+      <section className="goal-banner">
+        <strong>{goal.title}</strong>
+        <span>{goal.desc}</span>
+      </section>
 
+      <section className="game-shell" aria-label="一口锅接力">
+        <Timeline pot={pot} />
         <section className="pot-stage">
-          <Pressure score={score} mood={mood} />
-          <Hotpot mood={mood} history={history} impact={impact} reducedMotion={reducedMotion} />
+          <Pressure summary={summary} />
+          <Hotpot mood={potMood(summary)} history={pot.history} impact={impact} />
           <div className="pot-bubble" role="status">
-            {stopped ? "本锅拒绝再煮，除非来个救锅英雄。" : score >= 85 ? "离谱度飙升！锅要溢了！" : pick(potLines)}
+            {summary.ended ? endLine(goal, summary) : justCreated ? "锅已经开好，把目标传给第1位共犯。" : canAct ? "轮到你了：帮一把，还是添点乱？" : "你已经接过这一锅，把它传给下一位。"}
           </div>
         </section>
       </section>
 
-      <div className="action-bar">
-        <button className="draw-button" onClick={openDraw} disabled={isRevealed}>
-          <span className="spoon">🥄</span>
-          <span>{stopped ? "抽救锅一勺" : "盲盒抽一勺"}</span>
-        </button>
-      </div>
+      {!summary.ended && (
+        <div className={`choice-panel ${justCreated ? "creator-choice" : ""}`}>
+          {justCreated ? (
+            <>
+              <button className="draw-button" onClick={share}>
+                <span className="spoon">🥄</span>
+                <span>{copied ? "链接已备好" : "传给第1位"}</span>
+              </button>
+              <button className="ghost-action creator-skip" onClick={() => setJustCreated(false)}>我先接第一勺</button>
+            </>
+          ) : canAct ? (
+            <>
+              <button className="side-btn help" onClick={() => addAction("help")}>
+                <span>🤝</span>
+                <strong>帮一把</strong>
+              </button>
+              <button className="side-btn mess" onClick={() => addAction("mess")}>
+                <span>😈</span>
+                <strong>添点乱</strong>
+              </button>
+            </>
+          ) : (
+            <button className="draw-button" onClick={share}>
+              <span className="spoon">🥄</span>
+              <span>{copied ? "链接已备好" : "传给下一位"}</span>
+            </button>
+          )}
+        </div>
+      )}
 
-      {drawOpen && (
-          <DrawModal
-            drawn={drawn}
-            deck={deck}
-            swapped={swapped}
-            revealDraw={revealDraw}
-            swapSpoon={swapSpoon}
-            throwIntoPot={throwIntoPot}
-            close={() => setDrawOpen(false)}
-          />
-        )}
-
-      {isRevealed && (
-          <WantedPoster
-            score={score}
-            online={online}
-            userFoods={userFoods}
-            collective={posterCharge}
-            personal={chargeFor(userFoods)}
-            story={story}
-            shareFood={shareFood}
-            setShareFood={setShareFood}
-            share={share}
-            copied={copied}
-            reset={reset}
-          />
-        )}
+      {summary.ended && (
+        <EndReport pot={pot} goal={goal} summary={summary} copied={copied} share={share} reset={reset} />
+      )}
     </main>
   );
 }
 
+function endLine(goal, summary) {
+  if (goal.id === "free") return "这锅已经够热闹了。";
+  return summary.complete ? "目标达成，开锅看结果。" : "目标没保住，开锅看结果。";
+}
+
 function Ambient() {
-  const steam = Array.from({ length: 24 }, (_, index) => index);
-  const silhouettes = ["🌶️", "🫑", "🧅", "🌿", "🧄", "🫚"];
   return (
     <div className="ambient" aria-hidden="true">
-      {steam.map((item) => (
-        <span className="ambient-steam" key={item} style={{ "--x": `${Math.random() * 100}%`, "--d": `${8 + Math.random() * 8}s`, "--delay": `${Math.random() * -10}s` }} />
+      {Array.from({ length: 20 }, (_, index) => (
+        <span className="ambient-steam" key={index} style={{ "--x": `${6 + ((index * 23) % 88)}%`, "--d": `${8 + (index % 6)}s`, "--delay": `${index * -0.55}s` }} />
       ))}
-      {silhouettes.map((item, index) => (
-        <span className="silhouette" key={item} style={{ "--x": `${12 + index * 15}%`, "--delay": `${index * -3}s` }}>
-          {item}
-        </span>
+      {["🌶️", "🫑", "🧅", "🌿", "🧄"].map((item, index) => (
+        <span className="silhouette" key={item} style={{ "--x": `${14 + index * 17}%`, "--delay": `${index * -3}s` }}>{item}</span>
       ))}
     </div>
   );
 }
 
-function Pressure({ score, mood }) {
+function Pressure({ summary }) {
   return (
-    <div className={`pressure ${mood}`} aria-label={`离谱度 ${score}`}>
+    <div className={`pressure ${summary.integrity <= 35 ? "warning" : ""}`} aria-label={`承受值 ${summary.integrity} 火候 ${summary.heat}`}>
       <div className="pressure-head">
-        <span>离谱度</span>
-        <strong>{score}</strong>
+        <span>承受值</span>
+        <strong>{summary.integrity}</strong>
       </div>
       <div className="gauge">
-        <span style={{ width: `${score}%` }} />
+        <span style={{ width: `${clamp(summary.integrity, 0, 100)}%` }} />
+      </div>
+      <div className="meter-row">
+        <span>火候 {summary.heat}</span>
+        <span>好人 {summary.helpers} / 添乱 {summary.messers}</span>
       </div>
     </div>
   );
 }
 
-function Hotpot({ mood, history, impact, reducedMotion }) {
-  const visible = history.slice(-12);
+function Hotpot({ mood, history, impact }) {
+  const visible = [...INITIAL_FOODS, ...history].slice(-12);
   return (
     <div className={`hotpot ${mood}`}>
       <div className="handle left" />
@@ -466,7 +442,7 @@ function Hotpot({ mood, history, impact, reducedMotion }) {
       <div className="broth">
         <div className="broth-glow" />
         {visible.map((food, index) => (
-          <span className={`float-food tag-${food.tag}`} key={food.id} style={{ "--i": index, "--x": `${10 + ((index * 19) % 78)}%`, "--y": `${20 + ((index * 23) % 54)}%` }}>
+          <span className={`float-food tag-${food.tag}`} key={`${food.name}-${index}`} style={{ "--i": index, "--x": `${10 + ((index * 19) % 78)}%`, "--y": `${20 + ((index * 23) % 54)}%` }}>
             <span>{food.emoji}</span>
           </span>
         ))}
@@ -476,102 +452,92 @@ function Hotpot({ mood, history, impact, reducedMotion }) {
         <span className="ripple" />
       </div>
       <div className="pot-body" />
-      {impact && !reducedMotion && (
-          <div className="flying-food">
-            {impact.emoji}
-          </div>
-        )}
+      {impact && <div className="flying-food">{impact.emoji}</div>}
     </div>
   );
 }
 
-function DrawModal({ drawn, deck, swapped, revealDraw, swapSpoon, throwIntoPot, close }) {
+function Timeline({ pot }) {
   return (
-    <div className="overlay">
-      <section className="draw-modal" role="dialog" aria-modal="true" aria-label="盲盒抽取">
-        {!drawn ? (
-          <>
-            <button className="close-btn" onClick={close} aria-label="关闭">×</button>
-            <button className="mystery-bowl" onClick={revealDraw}>
-              <span className="bowl-lid" />
-              <span className="bowl-body" />
-              <strong>揭开</strong>
-            </button>
-            <div className="deck-hint">
-              {deck.map((item) => (
-                <span key={item.name}>{item.tag}</span>
-              ))}
-            </div>
-          </>
-        ) : (
-          <>
-            <button className="close-btn" onClick={close} aria-label="关闭">×</button>
-            <article className={`food-card ${drawn.base < 0 ? "remedy" : "spicy"}`}>
-              <div className="food-emoji">{drawn.emoji}</div>
-              <h2>{drawn.name}</h2>
-              <strong>{drawn.base > 0 ? "+" : ""}{drawn.base}</strong>
-              <p>{drawn.quip}</p>
-            </article>
-            <div className="modal-actions">
-              <button className="primary-action" onClick={throwIntoPot}>丢进锅</button>
-              <button className="ghost-action" onClick={swapSpoon} disabled={swapped}>换一勺</button>
-            </div>
-          </>
-        )}
-      </section>
-    </div>
+    <aside className="feed" aria-live="polite">
+      <div className="feed-title">
+        <span>前人记录</span>
+        <span>{pot.history.length ? `${pot.history.length} 勺` : "未开动"}</span>
+      </div>
+      {pot.history.length ? pot.history.map((item, index) => (
+        <div className={`feed-item ${item.side === "help" ? "cool" : "danger"}`} key={item.id}>
+          <span>第{index + 1}位 {item.actor} 加了 {item.name}</span>
+          <small>{item.side === "help" ? "帮忙" : "添乱"}</small>
+        </div>
+      )).reverse() : (
+        <div className="feed-item pot">
+          <span>还没人接锅。第一勺会决定气氛。</span>
+          <small>开局</small>
+        </div>
+      )}
+    </aside>
   );
 }
 
-function WantedPoster({ score, online, userFoods, collective, personal, story, shareFood, setShareFood, share, copied, reset }) {
+function EndReport({ pot, goal, summary, copied, share, reset }) {
+  const success = goal.id === "free" || summary.complete;
+  const crucial = summary.crucial;
+  const last = pot.history.at(-1);
   return (
     <div className="overlay reveal">
-      <section className="wanted">
-        <div className="stamp">哐</div>
-        <p className="poster-kicker">锅盖已飞</p>
-        <h2>本 锅 通 缉 令</h2>
-        <div className="charge">{collective}</div>
+      <section className={`wanted ${success ? "success" : "failed"}`}>
+        <div className="stamp">{success ? "成" : "裂"}</div>
+        <p className="poster-kicker">这口锅的一生</p>
+        <h2>{success ? "目标达成" : "目标没保住"}</h2>
+        <div className="charge">{success ? goal.success : goal.fail}</div>
         <div className="wanted-grid">
           <div>
-            <span>你的个人罪名</span>
-            <strong>{personal}</strong>
+            <span>锅主目标</span>
+            <strong>{goal.title}</strong>
           </div>
           <div>
-            <span>离谱度 / 共犯</span>
-            <strong>{score} / {online}</strong>
+            <span>接力结果</span>
+            <strong>{summary.count}人 / 承受值{summary.integrity}</strong>
           </div>
         </div>
         <div className="story">
-          <span>本锅剧情回放</span>
-          {(story.length ? story : ["第1勺 围观（你没来得及动手） +0"]).slice(-7).map((line) => (
-            <p key={line}>{line}</p>
+          <span>关键回放</span>
+          {pot.history.map((item, index) => (
+            <p key={item.id}>第{index + 1}勺：{item.actor} {item.side === "help" ? "帮了一把" : "添了点乱"}，放入{item.name}，承受值{item.integrity > 0 ? "+" : ""}{item.integrity}</p>
           ))}
         </div>
-        <label className="mine-picker">
-          <span>偷偷选一勺放进链接</span>
-          <select value={shareFood} onChange={(event) => setShareFood(event.target.value)}>
-            {allFoods.map((food) => (
-              <option key={food.name} value={food.name}>{food.name}</option>
-            ))}
-          </select>
-        </label>
+        <div className="divider" />
+        <p className="comment-text">
+          {crucial ? `关键一勺：${crucial.actor} 的 ${crucial.name}。` : "这锅安静得不像话。"}
+          {"\n"}
+          {last ? `锅的遗言：“${last.quip}”` : "锅的遗言：“还没人真正下手。”"}
+        </p>
         <div className="poster-actions">
           <button className="primary-action" onClick={share}>
             <span aria-hidden="true">↗</span>
-            {copied ? "链接已备好" : "分享并埋一勺雷"}
+            {copied ? "链接已备好" : "传阅结局"}
           </button>
           <button className="ghost-action" onClick={reset}>
             <span aria-hidden="true">↻</span>
-            再煮一锅
+            再开一锅
           </button>
         </div>
         <div className="share-line">
           <span aria-hidden="true">⌁</span>
-          <span>{shareFood} 已写进链接</span>
+          <span>锅是载体，目标才是赌注。</span>
         </div>
       </section>
     </div>
   );
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+try {
+  createRoot(document.getElementById("root")).render(
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  );
+} catch (error) {
+  console.error("Startup error", error);
+  document.body.innerHTML = '<main class="app error-app"><section class="error-panel" role="alert"><h1>一人一勺</h1><p>哎呀，出错了，请重启试试吧~</p></section></main>';
+}

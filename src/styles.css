@@ -1,9 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=ZCOOL+KuaiLe&display=swap");
-
 :root {
   color: #fff5e6;
   background: #1a0a08;
-  font-family: "Noto Sans SC", system-ui, sans-serif;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --red: #ff4d2e;
@@ -28,6 +26,7 @@ body,
 
 body {
   overflow-x: hidden;
+  background: #120705;
 }
 
 button,
@@ -41,10 +40,12 @@ button {
 
 .app {
   position: relative;
+  width: min(100%, 430px);
   min-height: 100vh;
   min-height: 100svh;
+  margin: 0 auto;
   overflow: hidden;
-  padding: max(22px, env(safe-area-inset-top)) clamp(16px, 4vw, 54px) calc(110px + env(safe-area-inset-bottom));
+  padding: max(10px, env(safe-area-inset-top)) 12px calc(88px + env(safe-area-inset-bottom));
   background:
     radial-gradient(circle at 50% 36%, rgba(255, 77, 46, 0.18), transparent 36%),
     radial-gradient(circle at 12% 85%, rgba(143, 191, 107, 0.12), transparent 28%),
@@ -102,34 +103,34 @@ button {
   position: relative;
   z-index: 2;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  max-width: 1160px;
+  gap: 10px;
+  max-width: 100%;
   margin: 0 auto;
 }
 
 .eyebrow {
   margin: 0 0 2px;
   color: var(--gold);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 900;
   letter-spacing: 0;
 }
 
 h1 {
   margin: 0;
-  font-family: "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
-  font-size: clamp(52px, 12vw, 128px);
-  line-height: 0.84;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: clamp(42px, 14vw, 62px);
+  line-height: 0.9;
   letter-spacing: 0;
   color: var(--cream);
-  text-shadow: 0 7px 0 rgba(0, 0, 0, 0.22), 0 0 32px rgba(255, 77, 46, 0.24);
+  text-shadow: 0 5px 0 rgba(0, 0, 0, 0.22), 0 0 24px rgba(255, 77, 46, 0.22);
 }
 
 .subtitle {
-  margin: 10px 0 0;
-  font-size: clamp(15px, 2vw, 22px);
+  margin: 6px 0 0;
+  font-size: 14px;
   font-weight: 800;
   color: rgba(255, 245, 230, 0.86);
 }
@@ -137,9 +138,10 @@ h1 {
 .online {
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto;
   gap: 8px;
-  min-width: 96px;
-  height: 42px;
+  min-width: 70px;
+  height: 34px;
   justify-content: center;
   border: 2px solid rgba(255, 201, 77, 0.42);
   border-radius: 999px;
@@ -147,26 +149,27 @@ h1 {
   font-weight: 900;
   background: rgba(53, 18, 12, 0.78);
   box-shadow: 0 0 24px rgba(255, 201, 77, 0.12);
+  font-size: 13px;
   animation: livePulse 2.5s ease-in-out infinite;
 }
 
 .game-shell {
-  display: grid;
-  grid-template-columns: minmax(230px, 320px) minmax(0, 1fr);
-  gap: clamp(18px, 4vw, 42px);
-  align-items: center;
-  max-width: 1160px;
-  margin: clamp(12px, 3vh, 30px) auto 0;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 7px;
+  width: 100%;
+  margin: 4px auto 0;
 }
 
 .feed {
   position: relative;
   z-index: 3;
-  max-height: min(52vh, 470px);
-  min-height: 300px;
+  width: 100%;
+  max-height: 18svh;
+  min-height: 132px;
   overflow: hidden;
-  padding: 16px;
-  border: 2px solid rgba(255, 201, 77, 0.24);
+  padding: 10px;
+  border: 1px solid rgba(255, 201, 77, 0.24);
   border-radius: 8px;
   background: rgba(26, 10, 8, 0.56);
   box-shadow: inset 0 0 40px rgba(255, 77, 46, 0.08), 0 18px 45px rgba(0, 0, 0, 0.22);
@@ -176,21 +179,29 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   color: var(--gold);
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 900;
 }
 
 .feed-item {
   display: grid;
-  gap: 6px;
-  margin-top: 8px;
-  padding: 10px 11px;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+  padding: 7px 8px;
   border-left: 4px solid var(--red);
   border-radius: 6px;
   color: rgba(255, 245, 230, 0.94);
+  font-size: 12px;
+  line-height: 1.35;
   background: rgba(255, 245, 230, 0.075);
+}
+
+.feed-item:nth-of-type(n+7) {
+  display: none;
 }
 
 .feed-item.cool {
@@ -215,13 +226,15 @@ h1 {
   position: relative;
   display: grid;
   justify-items: center;
-  min-height: min(66vh, 650px);
+  width: 100%;
+  min-height: 0;
+  align-content: center;
 }
 
 .pressure {
-  width: min(540px, 86vw);
-  margin: 0 auto 18px;
-  padding: 12px 14px 14px;
+  width: 100%;
+  margin: 0 auto 4px;
+  padding: 9px 10px 10px;
   border: 2px solid rgba(255, 201, 77, 0.5);
   border-radius: 8px;
   background: rgba(53, 18, 12, 0.68);
@@ -245,12 +258,12 @@ h1 {
 }
 
 .pressure-head strong {
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1;
 }
 
 .gauge {
-  height: 18px;
+  height: 15px;
   padding: 3px;
   border-radius: 999px;
   background: rgba(255, 245, 230, 0.13);
@@ -268,7 +281,7 @@ h1 {
 
 .hotpot {
   position: relative;
-  width: min(76vw, 610px);
+  width: min(94vw, 380px);
   aspect-ratio: 1.24;
   transform-origin: center bottom;
   animation: potBreath 3.2s ease-in-out infinite;
@@ -297,7 +310,7 @@ h1 {
   z-index: 1;
   width: 18%;
   height: 22%;
-  border: 16px solid #181817;
+  border: 10px solid #181817;
   border-radius: 50%;
   filter: drop-shadow(0 10px 0 rgba(0, 0, 0, 0.24));
 }
@@ -319,7 +332,7 @@ h1 {
   z-index: 6;
   width: 68%;
   height: 23%;
-  border: 8px solid #121212;
+  border: 6px solid #121212;
   border-radius: 56% 56% 18% 18%;
   background: linear-gradient(#423431, #191817);
   box-shadow: inset 0 -10px 0 rgba(0, 0, 0, 0.24), 0 20px 35px rgba(0, 0, 0, 0.25);
@@ -410,7 +423,7 @@ h1 {
   width: 86%;
   height: 52%;
   overflow: hidden;
-  border: 9px solid #161616;
+  border: 7px solid #161616;
   border-radius: 50%;
   background:
     radial-gradient(circle at 28% 36%, rgba(255, 201, 77, 0.28), transparent 14%),
@@ -453,10 +466,10 @@ h1 {
   z-index: 4;
   display: grid;
   place-items: center;
-  width: clamp(36px, 7vw, 56px);
-  height: clamp(32px, 6vw, 48px);
+  width: clamp(30px, 9vw, 44px);
+  height: clamp(28px, 8vw, 40px);
   transform: translate(-50%, -50%);
-  border: 3px solid #23140f;
+  border: 2px solid #23140f;
   border-radius: 40% 58% 45% 55%;
   background: rgba(255, 245, 230, 0.86);
   box-shadow: 0 5px 0 rgba(0, 0, 0, 0.18);
@@ -464,7 +477,7 @@ h1 {
 }
 
 .float-food span {
-  font-size: clamp(20px, 4.6vw, 30px);
+  font-size: clamp(18px, 5.5vw, 25px);
 }
 
 .tag-清,
@@ -507,7 +520,7 @@ h1 {
   z-index: 2;
   width: 94%;
   height: 48%;
-  border: 11px solid #121212;
+  border: 8px solid #121212;
   border-radius: 16% 16% 42% 42% / 25% 25% 62% 62%;
   background: linear-gradient(160deg, #454545 0%, var(--iron) 42%, #111 100%);
   box-shadow:
@@ -539,27 +552,31 @@ h1 {
 .pot-bubble {
   position: relative;
   z-index: 6;
-  max-width: min(86vw, 480px);
-  margin-top: -8px;
-  padding: 10px 14px;
+  width: 100%;
+  max-width: min(100%, 480px);
+  margin-top: -2px;
+  padding: 8px 10px;
   border: 2px solid rgba(255, 201, 77, 0.45);
   border-radius: 8px;
   background: rgba(26, 10, 8, 0.72);
   color: rgba(255, 245, 230, 0.92);
   text-align: center;
+  font-size: 13px;
   font-weight: 800;
 }
 
 .action-bar {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  right: auto;
   bottom: 0;
   z-index: 8;
   display: flex;
   justify-content: center;
-  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  width: min(100%, 430px);
+  padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
   background: linear-gradient(transparent, rgba(26, 10, 8, 0.9) 38%, rgba(26, 10, 8, 0.98));
+  transform: translateX(-50%);
 }
 
 .draw-button {
@@ -568,15 +585,15 @@ h1 {
   justify-content: center;
   gap: 10px;
   width: min(560px, 100%);
-  min-height: 64px;
+  min-height: 56px;
   border: 3px solid #5f170e;
   border-radius: 8px;
   color: var(--cream);
-  font-size: clamp(20px, 5vw, 30px);
+  font-size: 20px;
   font-weight: 900;
   background: linear-gradient(180deg, #ff6a36, var(--red) 58%, #ad1f12);
-  box-shadow: 0 13px 0 #5a120c, 0 0 36px rgba(255, 77, 46, 0.44);
-  transform: translateY(-8px);
+  box-shadow: 0 9px 0 #5a120c, 0 0 26px rgba(255, 77, 46, 0.38);
+  transform: translateY(-5px);
   transition: transform 0.16s, box-shadow 0.16s;
   animation: buttonBreath 1.9s ease-in-out infinite;
 }
@@ -657,7 +674,7 @@ h1 {
   transform: translateX(-50%);
   z-index: 3;
   font-size: 36px;
-  font-family: "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
 }
 
 .bowl-lid,
@@ -732,7 +749,7 @@ h1 {
 
 .food-card h2 {
   margin: 16px 0 6px;
-  font-family: "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
   font-size: 44px;
   line-height: 1;
   letter-spacing: 0;
@@ -826,7 +843,7 @@ h1 {
 
 .wanted h2 {
   margin: 0;
-  font-family: "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
   font-size: clamp(38px, 9vw, 76px);
   line-height: 1;
   letter-spacing: 0;
@@ -852,8 +869,7 @@ h1 {
 }
 
 .wanted-grid div,
-.story,
-.mine-picker {
+.story {
   position: relative;
   z-index: 2;
   padding: 14px;
@@ -863,8 +879,7 @@ h1 {
 }
 
 .wanted-grid span,
-.story span,
-.mine-picker span {
+.story span {
   display: block;
   margin-bottom: 6px;
   color: #8c2c1e;
@@ -887,20 +902,6 @@ h1 {
   line-height: 1.45;
 }
 
-.mine-picker {
-  display: grid;
-  margin-top: 12px;
-}
-
-.mine-picker select {
-  min-height: 44px;
-  border: 2px solid #6b2419;
-  border-radius: 6px;
-  color: #3d160f;
-  background: #fff4d5;
-  font-weight: 900;
-}
-
 .wanted .ghost-action {
   color: #3d160f;
   border-color: rgba(61, 22, 15, 0.3);
@@ -919,7 +920,7 @@ h1 {
   border: 7px solid rgba(184, 26, 14, 0.78);
   border-radius: 50%;
   color: rgba(184, 26, 14, 0.78);
-  font-family: "ZCOOL KuaiLe", "Noto Sans SC", sans-serif;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
   font-size: 46px;
   transform: rotate(-18deg);
   animation: stampIn 0.52s 0.42s cubic-bezier(0.18, 0.9, 0.2, 1.35) both;
@@ -944,6 +945,206 @@ h1 {
   border: 14px solid rgba(255, 77, 46, 0.34);
   box-shadow: inset 0 0 80px rgba(255, 29, 18, 0.32);
   animation: edgeWarning 0.55s ease-in-out infinite alternate;
+}
+
+.fatal-flash::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  background: rgba(255, 29, 18, 0.42);
+  animation: revealFlash 0.62s ease-out both;
+}
+
+.create-screen {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  align-content: center;
+  gap: 14px;
+  min-height: 100svh;
+}
+
+.create-screen h1 {
+  margin-bottom: 2px;
+}
+
+.goal-list {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+
+.goal-card {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  min-height: 76px;
+  padding: 13px 14px;
+  border: 2px solid rgba(255, 201, 77, 0.24);
+  border-radius: 8px;
+  color: var(--cream);
+  text-align: left;
+  background: rgba(53, 18, 12, 0.72);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.18);
+}
+
+.goal-card.active {
+  border-color: rgba(255, 201, 77, 0.9);
+  background: linear-gradient(135deg, rgba(255, 77, 46, 0.42), rgba(53, 18, 12, 0.86));
+}
+
+.goal-card strong {
+  color: var(--gold);
+  font-size: 18px;
+}
+
+.goal-card span {
+  color: rgba(255, 245, 230, 0.78);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.start-action {
+  width: 100%;
+  min-height: 56px;
+  font-size: 20px;
+}
+
+.goal-banner {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 2px solid rgba(255, 201, 77, 0.34);
+  border-radius: 8px;
+  color: var(--cream);
+  background: rgba(26, 10, 8, 0.7);
+}
+
+.goal-banner strong {
+  color: var(--gold);
+  font-size: 16px;
+}
+
+.goal-banner span {
+  color: rgba(255, 245, 230, 0.78);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.meter-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  color: rgba(255, 245, 230, 0.74);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.choice-panel {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  bottom: 0;
+  z-index: 12;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: min(100%, 430px);
+  padding: 12px 10px calc(12px + env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, rgba(26, 10, 8, 0.9) 38%, rgba(26, 10, 8, 0.98));
+  transform: translateX(-50%);
+}
+
+.choice-panel .draw-button {
+  grid-column: 1 / -1;
+}
+
+.creator-choice .creator-skip {
+  grid-column: 1 / -1;
+  min-height: 42px;
+  color: rgba(255, 245, 230, 0.86);
+  border-color: rgba(255, 245, 230, 0.22);
+}
+
+.side-btn {
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  min-height: 62px;
+  border: 3px solid rgba(255, 245, 230, 0.16);
+  border-radius: 8px;
+  color: var(--cream);
+  font-weight: 900;
+  box-shadow: 0 9px 0 rgba(0, 0, 0, 0.28);
+  transform: translateY(-5px);
+}
+
+.side-btn span {
+  font-size: 24px;
+}
+
+.side-btn.help {
+  background: linear-gradient(180deg, #70c17b, #397f43);
+}
+
+.side-btn.mess {
+  background: linear-gradient(180deg, #ff7a35, #d3261c);
+}
+
+.divider {
+  border-top: 2px dashed rgba(61, 22, 15, 0.42);
+  margin: 16px 0;
+}
+
+.comment-text {
+  position: relative;
+  z-index: 2;
+  margin: 12px 0 0;
+  color: #3d160f;
+  white-space: pre-line;
+  line-height: 1.65;
+  font-weight: 900;
+}
+
+.wanted.success .charge {
+  color: #347a37;
+}
+
+.wanted.failed .charge {
+  color: #a31c10;
+}
+
+.error-app {
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.error-panel {
+  width: min(92vw, 430px);
+  padding: 28px 20px;
+  border: 3px solid rgba(255, 201, 77, 0.52);
+  border-radius: 8px;
+  color: var(--cream);
+  text-align: center;
+  background: rgba(53, 18, 12, 0.82);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.46);
+}
+
+.error-panel h1 {
+  font-size: 46px;
+  line-height: 1;
+}
+
+.error-panel p {
+  margin: 14px 0 0;
+  font-weight: 900;
 }
 
 @keyframes ambientRise {
