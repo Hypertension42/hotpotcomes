@@ -3,18 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="情绪温泉锅，把说不出口的东西放进锅里，捞出一碗热气腾腾的安慰。">
-  <title>情绪温泉锅</title>
+  <meta name="description" content="一人一勺：最后一勺。前面四勺已经下锅，现在只差你这一勺。">
+  <title>一人一勺：最后一勺</title>
   <style>
     :root {
-      --bg: #21100d;
-      --panel: rgba(58, 30, 23, 0.84);
-      --cream: #ffeecf;
-      --gold: #ffd36a;
-      --hot: #ff7a4f;
-      --soft: #ffb08a;
-      --brown: #7a452b;
-      --ink: #2a1410;
+      --bg: #1a0907;
+      --cream: #fff0d2;
+      --gold: #ffd05a;
+      --red: #ff5a37;
+      --brown: #74351f;
+      --dark: #210c08;
     }
 
     * {
@@ -28,8 +26,8 @@
       height: 100%;
       margin: 0;
       overflow: hidden;
-      background: var(--bg);
       color: var(--cream);
+      background: var(--bg);
       font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
       touch-action: none;
       user-select: none;
@@ -40,11 +38,11 @@
       position: fixed;
       inset: 0;
       background:
-        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.026) 1px, transparent 1px),
-        radial-gradient(circle at 50% 30%, rgba(255, 149, 91, 0.23), transparent 30%),
-        radial-gradient(circle at 20% 88%, rgba(255, 211, 106, 0.16), transparent 28%),
-        linear-gradient(165deg, #351812 0%, #24100d 55%, #160907 100%);
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.026) 1px, transparent 1px),
+        radial-gradient(circle at 50% 38%, rgba(255, 88, 49, .24), transparent 34%),
+        radial-gradient(circle at 50% 92%, rgba(255, 208, 90, .16), transparent 28%),
+        linear-gradient(160deg, #34120d 0%, #210b08 55%, #120504 100%);
       background-size: 8px 8px, 8px 8px, 100% 100%, 100% 100%, 100% 100%;
       image-rendering: pixelated;
     }
@@ -58,10 +56,10 @@
     }
 
     canvas {
+      display: block;
       width: min(100vw, 460px);
       height: 100svh;
       max-height: 920px;
-      display: block;
       image-rendering: pixelated;
     }
 
@@ -72,13 +70,13 @@
       display: none;
       place-items: center;
       padding: 24px;
-      background: #21100d;
       color: var(--cream);
+      background: #1a0907;
       text-align: center;
       font-weight: 900;
     }
 
-    .share-panel {
+    .actions {
       position: fixed;
       left: 50%;
       bottom: max(14px, env(safe-area-inset-bottom));
@@ -90,39 +88,38 @@
       transform: translateX(-50%);
     }
 
-    .share-panel.show {
+    .actions.show {
       display: grid;
     }
 
     button {
-      min-height: 48px;
+      min-height: 50px;
       border: 0;
       border-radius: 8px;
       padding: 12px 14px;
-      color: #35170f;
+      color: #2b100b;
       background: var(--gold);
+      box-shadow: 0 6px 0 rgba(0, 0, 0, .28);
       font: inherit;
       font-weight: 900;
-      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.24);
-      cursor: pointer;
     }
 
     button.secondary {
       color: var(--cream);
-      background: rgba(255, 238, 207, 0.14);
-      border: 2px solid rgba(255, 238, 207, 0.24);
+      background: rgba(255, 240, 210, .12);
+      border: 2px solid rgba(255, 240, 210, .24);
       box-shadow: none;
     }
   </style>
 </head>
 <body>
   <main id="app">
-    <canvas id="game" aria-label="情绪温泉锅互动作品"></canvas>
+    <canvas id="game" aria-label="一人一勺最后一勺互动作品"></canvas>
   </main>
   <div id="fallback" class="fallback" role="alert">锅坏了，再涮一次吧~</div>
-  <div id="sharePanel" class="share-panel">
-    <button id="shareBtn" type="button">分享这份安慰</button>
-    <button id="againBtn" class="secondary" type="button">再煮一锅</button>
+  <div id="actions" class="actions">
+    <button id="shareBtn" type="button">复制这份锅报</button>
+    <button id="againBtn" class="secondary" type="button">再下一勺</button>
   </div>
 
   <script>
@@ -133,62 +130,57 @@
         const canvas = document.getElementById("game");
         const ctx = canvas.getContext("2d", { alpha: false });
         const fallback = document.getElementById("fallback");
-        const sharePanel = document.getElementById("sharePanel");
+        const actions = document.getElementById("actions");
         const shareBtn = document.getElementById("shareBtn");
         const againBtn = document.getElementById("againBtn");
-
-        const STORE_KEY = "emotion_onsen_pot_stats";
-        const COOK_TIME = 10000;
-        const HOLD_TIME = 1150;
+        const STORE_KEY = "one_spoon_last_spoon_stats";
         const DPR_LIMIT = 2;
-        const EMOTIONS = [
-          { id: "anxiety", label: "焦虑", icon: "?", color: "#ff9a68", soup: "#ff8b5d", taste: "微麻", value: 6 },
-          { id: "pressure", label: "压力", icon: "!", color: "#ff6b5c", soup: "#e95d50", taste: "厚辣", value: 8 },
-          { id: "tired", label: "疲惫", icon: "Z", color: "#8fc9ff", soup: "#8cb9d9", taste: "温甜", value: 4 },
-          { id: "wronged", label: "委屈", icon: "~", color: "#c9a7ff", soup: "#b994d9", taste: "软糯", value: 5 },
-          { id: "lost", label: "迷茫", icon: "*", color: "#b4e8ad", soup: "#98cf92", taste: "清苦", value: 3 }
+        const TARGET = 5;
+
+        const PRESETS = [
+          {
+            target: "让这锅活过 5 勺",
+            before: 42,
+            records: [
+              { name: "清汤", open: "第1勺：清汤把锅救回一点。", fog: "第1勺：有人说自己在救锅", delta: 18, heat: -6, color: "#8fd3c2" },
+              { name: "辣油", open: "第2勺：辣油让锅开始冒红泡。", fog: "第2勺：红色汤花，看不清", delta: -28, heat: 22, color: "#ff6848" },
+              { name: "雪梨汤", open: "第3勺：雪梨汤压住了一半火气。", fog: "第3勺：留下了一句“别急”", delta: 14, heat: -10, color: "#ffd9a1" },
+              { name: "苦瓜", open: "第4勺：苦瓜让锅边裂了一条线。", fog: "第4勺：锅边突然发苦", delta: -22, heat: 8, color: "#9bd36c" }
+            ]
+          },
+          {
+            target: "守住锅主最后一点体面",
+            before: 36,
+            records: [
+              { name: "温水", open: "第1勺：温水让汤面安静了几秒。", fog: "第1勺：汤面短暂安静", delta: 10, heat: -6, color: "#a9dbff" },
+              { name: "老火锅底", open: "第2勺：老火锅底把整锅推热。", fog: "第2勺：有人加了很重的东西", delta: -24, heat: 25, color: "#c85639" },
+              { name: "豆皮", open: "第3勺：豆皮吸走了一点混乱。", fog: "第3勺：一片东西沉了下去", delta: 12, heat: -3, color: "#e8c67d" },
+              { name: "酸笋", open: "第4勺：酸笋让锅盖开始发抖。", fog: "第4勺：空气突然酸了一下", delta: -25, heat: 13, color: "#d6d56b" }
+            ]
+          },
+          {
+            target: "别让这锅在最后翻车",
+            before: 48,
+            records: [
+              { name: "萝卜", open: "第1勺：萝卜把汤底变清。", fog: "第1勺：白色方块浮起来", delta: 13, heat: -7, color: "#f3efe0" },
+              { name: "花椒", open: "第2勺：花椒让锅开始发麻。", fog: "第2勺：锅里开始发麻", delta: -19, heat: 18, color: "#ac6f32" },
+              { name: "热茶", open: "第3勺：热茶没有降温，但稳住了汤。", fog: "第3勺：有人倒了一杯热的", delta: 9, heat: 4, color: "#b68151" },
+              { name: "爆辣包", open: "第4勺：爆辣包让锅只剩一口气。", fog: "第4勺：锅盖弹了一下", delta: -43, heat: 35, color: "#ff3e2b" }
+            ]
+          }
         ];
-        const FIRE_LEVELS = [
-          { id: "small", label: "小火", bubble: 0.65, steam: "#fff0d6", warmth: 1 },
-          { id: "mid", label: "中火", bubble: 1.1, steam: "#ffe0bc", warmth: 2 },
-          { id: "big", label: "大火", bubble: 1.72, steam: "#ffc8a4", warmth: 3 }
+
+        const SPOONS = [
+          { id: "save", name: "清汤勺", label: "救一把", delta: 28, heat: -12, color: "#8dd7c8", soup: "#bbdfc8" },
+          { id: "heat", name: "爆辣勺", label: "添点热闹", delta: -36, heat: 30, color: "#ff553c", soup: "#ff6549" },
+          { id: "blind", name: "盲盒勺", label: "赌一口", delta: 0, heat: 10, color: "#ffd05a", soup: "#eeb85a" }
         ];
-        const FOODS = [
-          { name: "热汤", icon: "soup", color: "#f2b15e" },
-          { name: "蛋糕", icon: "cake", color: "#ffd0dd" },
-          { name: "面包", icon: "bread", color: "#d8954c" },
-          { name: "奶茶", icon: "tea", color: "#c58c5a" },
-          { name: "粥", icon: "porridge", color: "#f4dfb3" },
-          { name: "关东煮", icon: "oden", color: "#f0bd62" }
-        ];
-        const COMFORTS = {
-          anxiety: [
-            "先把呼吸放慢一点，今天不用立刻把所有答案都找齐。",
-            "心里很吵的时候，先照顾眼前这一小口热汤就够了。"
-          ],
-          pressure: [
-            "你不是不够强，你只是背了太多不该同时背起的东西。",
-            "把火候调小一点也没关系，慢慢煮熟的人生也很好吃。"
-          ],
-          tired: [
-            "先别急着恢复满格，今晚能好好坐一会儿就已经很好。",
-            "疲惫不是失败，它只是身体在提醒你该把自己捞起来。"
-          ],
-          wronged: [
-            "那些没被听见的话，锅先替你咕嘟一会儿。",
-            "委屈不需要马上解释，被热气抱一下也算被照顾。"
-          ],
-          lost: [
-            "迷路的时候不用急着证明方向，先让脚底暖起来。",
-            "你不是没有路，只是雾还没散，汤已经先热了。"
-          ]
-        };
-        const MIXED_LINES = [
-          "今天先别急着变好，先把自己喂饱。",
-          "这碗安慰没有大道理，只有一口刚刚好的热。",
-          "你可以慢一点，锅里的热气会等你。",
-          "如果世界太硬，就先喝一口软的。",
-          "把说不出口的东西煮软以后，今晚就不必再逞强。"
+
+        const BLIND = [
+          { name: "冰糖", delta: 24, heat: -8, line: "盲盒里是冰糖，刚好把火气压住。" },
+          { name: "老辣油", delta: -34, heat: 30, line: "盲盒里是老辣油，整锅直接上头。" },
+          { name: "一勺空气", delta: 4, heat: 0, line: "盲盒里像是什么都没有，但锅松了口气。" },
+          { name: "过期好运", delta: -18, heat: 18, line: "盲盒里是过期好运，味道有点不对。" }
         ];
 
         const state = {
@@ -196,32 +188,40 @@
           h: 844,
           dpr: 1,
           phase: "choose",
-          fireIndex: 1,
-          selected: null,
+          scenario: pick(PRESETS),
+          spoon: null,
+          blind: null,
           drag: null,
-          cookStart: 0,
-          cookedAt: 0,
-          holdStart: 0,
-          lidOpen: 0,
+          finalIntegrity: 42,
+          finalHeat: 55,
+          replayStart: 0,
+          revealIndex: -1,
           result: null,
           particles: [],
-          bubbles: [],
           steam: [],
+          soupBits: [],
           shakeUntil: 0,
-          pointerDown: false,
-          pointerId: null,
           lastTime: 0,
-          message: "拖一个情绪，丢进温泉锅。",
+          pointerDown: false,
           stats: loadStats(),
-          layout: {}
+          layout: {},
+          message: "前面四勺已经下锅，现在只差你这一勺。"
         };
+
+        function pick(list) {
+          return list[Math.floor(Math.random() * list.length)];
+        }
+
+        function clamp(v, min, max) {
+          return Math.max(min, Math.min(max, v));
+        }
 
         function loadStats() {
           try {
             const raw = localStorage.getItem(STORE_KEY);
-            return raw ? JSON.parse(raw) : { unlocked: {}, perfect: 0, cooked: 0 };
+            return raw ? JSON.parse(raw) : { played: 0, saved: 0, lastRoles: {} };
           } catch (error) {
-            return { unlocked: {}, perfect: 0, cooked: 0 };
+            return { played: 0, saved: 0, lastRoles: {} };
           }
         }
 
@@ -235,15 +235,15 @@
         }
 
         function resize() {
-          const rectW = Math.min(window.innerWidth, 460);
-          const rectH = window.innerHeight || 844;
+          const width = Math.min(window.innerWidth, 460);
+          const height = window.innerHeight || 844;
           state.dpr = Math.min(window.devicePixelRatio || 1, DPR_LIMIT);
-          state.w = Math.round(rectW);
-          state.h = Math.round(rectH);
-          canvas.width = Math.round(state.w * state.dpr);
-          canvas.height = Math.round(state.h * state.dpr);
-          canvas.style.width = state.w + "px";
-          canvas.style.height = state.h + "px";
+          state.w = Math.round(width);
+          state.h = Math.round(height);
+          canvas.width = Math.round(width * state.dpr);
+          canvas.height = Math.round(height * state.dpr);
+          canvas.style.width = width + "px";
+          canvas.style.height = height + "px";
           ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
           computeLayout();
         }
@@ -251,27 +251,27 @@
         function computeLayout() {
           const w = state.w;
           const h = state.h;
-          const potY = h * 0.43;
-          const potW = Math.min(w * 0.74, 300);
+          const potW = Math.min(w * 0.84, 340);
           const potH = Math.min(h * 0.22, 176);
+          const potY = h * 0.39;
           state.layout = {
-            titleY: Math.max(32, h * 0.052),
+            titleY: Math.max(28, h * 0.044),
+            target: { x: 18, y: Math.max(130, h * 0.16), w: w - 36, h: 72 },
             pot: { x: (w - potW) / 2, y: potY, w: potW, h: potH },
-            lid: { x: (w - potW * 0.62) / 2, y: potY - potH * 0.18, w: potW * 0.62, h: potH * 0.22 },
-            fire: { x: 18, y: potY + potH * 0.52, w: 70, h: 70 },
-            chef: { x: w * 0.68, y: potY + potH * 0.2, scale: Math.max(2, Math.min(3, w / 150)) },
-            emotionY: h - Math.max(118, h * 0.145),
-            result: { x: 20, y: h * 0.11, w: w - 40, h: h * 0.76 }
+            lid: { x: (w - potW * 0.58) / 2, y: potY - potH * 0.2, w: potW * 0.58, h: potH * 0.23 },
+            chef: { x: w * 0.72, y: potY + potH * 0.06, scale: Math.max(2.1, Math.min(3, w / 145)) },
+            dockY: h - Math.max(150, h * 0.18),
+            result: { x: 20, y: h * 0.08, w: w - 40, h: h * 0.78 }
           };
         }
 
-        function px(v) {
+        function p(v) {
           return Math.round(v);
         }
 
         function rect(x, y, w, h, color) {
           ctx.fillStyle = color;
-          ctx.fillRect(px(x), px(y), px(w), px(h));
+          ctx.fillRect(p(x), p(y), p(w), p(h));
         }
 
         function text(value, x, y, size, color, align, weight) {
@@ -279,7 +279,7 @@
           ctx.textAlign = align || "left";
           ctx.textBaseline = "top";
           ctx.font = (weight || 900) + " " + size + "px PingFang SC, Microsoft YaHei, sans-serif";
-          ctx.fillText(value, px(x), px(y));
+          ctx.fillText(value, p(x), p(y));
         }
 
         function wrapText(value, x, y, maxWidth, size, lineHeight, color, align) {
@@ -293,14 +293,14 @@
           for (let i = 0; i < chars.length; i += 1) {
             const test = line + chars[i];
             if (ctx.measureText(test).width > maxWidth && line) {
-              ctx.fillText(line, px(x), px(yy));
+              ctx.fillText(line, p(x), p(yy));
               line = chars[i];
               yy += lineHeight;
             } else {
               line = test;
             }
           }
-          if (line) ctx.fillText(line, px(x), px(yy));
+          if (line) ctx.fillText(line, p(x), p(yy));
           return yy + lineHeight;
         }
 
@@ -309,533 +309,503 @@
         }
 
         function pointerPoint(event) {
-          const rectBox = canvas.getBoundingClientRect();
+          const r = canvas.getBoundingClientRect();
           return {
-            x: (event.clientX - rectBox.left) * (state.w / rectBox.width),
-            y: (event.clientY - rectBox.top) * (state.h / rectBox.height)
+            x: (event.clientX - r.left) * (state.w / r.width),
+            y: (event.clientY - r.top) * (state.h / r.height)
           };
         }
 
-        function emotionBoxes() {
-          const gap = 8;
-          const pad = 14;
-          const size = Math.min(62, (state.w - pad * 2 - gap * 4) / 5);
-          const startX = (state.w - size * 5 - gap * 4) / 2;
-          return EMOTIONS.map((item, index) => ({
-            item,
-            x: startX + index * (size + gap),
-            y: state.layout.emotionY,
-            w: size,
-            h: size
-          }));
+        function spoonBoxes() {
+          const gap = 10;
+          const size = Math.min(96, (state.w - 44 - gap * 2) / 3);
+          const startX = (state.w - size * 3 - gap * 2) / 2;
+          return SPOONS.map(function (spoon, index) {
+            return { item: spoon, x: startX + index * (size + gap), y: state.layout.dockY, w: size, h: size };
+          });
         }
 
-        function spawnSplash(x, y, color, count) {
+        function spawn(x, y, color, count, power) {
           for (let i = 0; i < count; i += 1) {
             state.particles.push({
-              x,
-              y,
-              vx: (Math.random() - 0.5) * 3.6,
-              vy: -Math.random() * 4.5 - 1,
-              life: 420 + Math.random() * 320,
+              x: x,
+              y: y,
+              vx: (Math.random() - 0.5) * (power || 4),
+              vy: -Math.random() * (power || 4) - 1,
               age: 0,
-              size: 3 + Math.random() * 6,
-              color
+              life: 420 + Math.random() * 520,
+              size: 3 + Math.random() * 7,
+              color: color
             });
           }
         }
 
-        function spawnSteamBurst() {
+        function steamBurst(intense) {
           const pot = state.layout.pot;
-          for (let i = 0; i < 80; i += 1) {
+          const count = intense ? 90 : 36;
+          for (let i = 0; i < count; i += 1) {
             state.steam.push({
-              x: pot.x + pot.w * (0.18 + Math.random() * 0.64),
-              y: pot.y + pot.h * 0.12,
-              vx: (Math.random() - 0.5) * 2.8,
-              vy: -2.6 - Math.random() * 4.4,
+              x: pot.x + pot.w * (0.16 + Math.random() * 0.68),
+              y: pot.y + pot.h * 0.08,
+              vx: (Math.random() - 0.5) * (intense ? 2.6 : 1),
+              vy: -1.4 - Math.random() * (intense ? 4.6 : 1.8),
               age: 0,
-              life: 900 + Math.random() * 800,
-              size: 8 + Math.random() * 22,
-              color: FIRE_LEVELS[state.fireIndex].steam
+              life: 800 + Math.random() * 950,
+              size: 8 + Math.random() * (intense ? 24 : 14),
+              color: intense ? "#ffd3b3" : "#fff0d2"
             });
           }
-          state.shakeUntil = performance.now() + 520;
         }
 
-        function dropEmotion(item) {
-          state.selected = item;
-          state.phase = "cooking";
-          state.cookStart = performance.now();
-          state.cookedAt = 0;
-          state.holdStart = 0;
-          state.message = item.label + "已经下锅，调火候煮 10 秒。";
-          state.stats.unlocked[item.id] = true;
-          saveStats();
+        function dropSpoon(spoon) {
+          const blind = spoon.id === "blind" ? pick(BLIND) : null;
+          const delta = spoon.id === "blind" ? blind.delta : spoon.delta;
+          const heat = spoon.id === "blind" ? blind.heat : spoon.heat;
+          state.spoon = spoon;
+          state.blind = blind;
+          state.finalIntegrity = clamp(state.scenario.before + delta, 0, 100);
+          state.finalHeat = clamp(55 + heat, 0, 120);
+          state.phase = "replay";
+          state.replayStart = performance.now();
+          state.revealIndex = -1;
+          state.message = "锅史开始回放。";
+          state.shakeUntil = performance.now() + 480;
           const pot = state.layout.pot;
-          spawnSplash(pot.x + pot.w / 2, pot.y + pot.h * 0.36, item.color, 38);
-        }
-
-        function finishCooking(now) {
-          if (state.phase === "cooking") {
-            state.phase = "ready";
-            state.cookedAt = now;
-            state.message = "锅盖在发抖，长按锅盖把安慰捞出来。";
-          }
-        }
-
-        function openLid() {
-          if (!state.selected) return;
-          state.phase = "result";
-          state.lidOpen = 1;
-          state.result = buildResult();
-          state.stats.cooked += 1;
-          if (state.fireIndex === 1) state.stats.perfect += 1;
-          saveStats();
-          spawnSteamBurst();
-          sharePanel.classList.add("show");
+          spawn(pot.x + pot.w / 2, pot.y + pot.h * 0.35, spoon.color, 70, 6);
+          steamBurst(true);
         }
 
         function buildResult() {
-          const item = state.selected;
-          const fire = FIRE_LEVELS[state.fireIndex];
-          const foodIndex = (item.value + fire.warmth + state.stats.cooked) % FOODS.length;
-          const food = FOODS[foodIndex];
-          const names = {
-            anxiety: "把心跳放慢热汤锅",
-            pressure: "卸下一点重量厚汤锅",
-            tired: "先坐一会儿软粥锅",
-            wronged: "没人听见也抱抱锅",
-            lost: "雾里慢慢发光锅"
+          const survived = state.finalIntegrity > 0;
+          let role = "";
+          let title = "";
+          let line = "";
+          if (survived && state.spoon.id === "save") {
+            role = "救场那一勺";
+            title = "锅主的目标，被你稳住了";
+            line = "你没有把场面变得更热闹，但你让它终于撑到最后。";
+          } else if (!survived && state.spoon.id === "save") {
+            role = "善意误判者";
+            title = "你想救锅，但汤底已经太满";
+            line = "有些局面不是不值得救，只是你来得太晚。";
+          } else if (!survived && state.spoon.id === "heat") {
+            role = "最后一勺";
+            title = "这锅，停在了你的热闹里";
+            line = "你只是添了一点火，没想到它刚好就是最后那一下。";
+          } else if (survived && state.spoon.id === "heat") {
+            role = "看戏赢家";
+            title = "你添了乱，但锅居然撑住了";
+            line = "有时候世界比你想象得更耐煮，热闹也能变成味道。";
+          } else if (state.spoon.id === "blind") {
+            role = survived ? "赌对的人" : "赌错的人";
+            title = survived ? "盲盒救了这锅" : "盲盒把锅推过了线";
+            line = state.blind ? state.blind.line : "你把结果交给了未知，锅给了你答案。";
+          } else {
+            role = survived ? "勉强守住的人" : "没守住的人";
+            title = survived ? "这锅撑住了" : "这锅没撑住";
+            line = "你的这一勺，被写进了这口锅的结局。";
+          }
+          const report = {
+            role: role,
+            title: title,
+            line: line,
+            survived: survived,
+            verdict: survived ? "锅活过了第 5 勺" : "锅没撑过第 5 勺"
           };
-          const after = {
-            small: "温温地抱住你",
-            mid: "刚好把你煮软",
-            big: "把硬撑的壳煮开"
-          };
-          const comfortList = COMFORTS[item.id] || MIXED_LINES;
-          const line = comfortList[(fire.warmth + state.stats.cooked) % comfortList.length];
-          const mixed = MIXED_LINES[(item.value + fire.warmth * 2) % MIXED_LINES.length];
-          return {
-            title: names[item.id],
-            taste: item.taste + "，" + after[fire.id],
-            food,
-            line,
-            mixed,
-            share: "我在情绪温泉锅里放进了「" + item.label + "」，捞出了「" + names[item.id] + "」。" + mixed
-          };
+          state.stats.played += 1;
+          if (survived) state.stats.saved += 1;
+          state.stats.lastRoles[role] = (state.stats.lastRoles[role] || 0) + 1;
+          saveStats();
+          return report;
+        }
+
+        function finishReplay() {
+          state.result = buildResult();
+          state.phase = "result";
+          state.shakeUntil = performance.now() + 360;
+          steamBurst(true);
+          actions.classList.add("show");
         }
 
         function reset() {
           state.phase = "choose";
-          state.selected = null;
+          state.scenario = pick(PRESETS);
+          state.spoon = null;
+          state.blind = null;
           state.drag = null;
-          state.cookStart = 0;
-          state.cookedAt = 0;
-          state.holdStart = 0;
-          state.lidOpen = 0;
+          state.finalIntegrity = state.scenario.before;
+          state.finalHeat = 55;
+          state.replayStart = 0;
+          state.revealIndex = -1;
           state.result = null;
           state.particles = [];
-          state.bubbles = [];
           state.steam = [];
-          state.shakeUntil = 0;
-          state.message = "拖一个情绪，丢进温泉锅。";
-          sharePanel.classList.remove("show");
+          state.soupBits = [];
+          state.message = "前面四勺已经下锅，现在只差你这一勺。";
+          actions.classList.remove("show");
         }
 
-        function copyShare() {
-          const content = state.result ? state.result.share : "我煮了一锅情绪温泉。";
+        function copyReport() {
+          const content = state.result
+            ? "我在《一人一勺》里下了最后一勺，身份是「" + state.result.role + "」：" + state.result.line
+            : "我在《一人一勺》里下了最后一勺。";
           if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(content).then(function () {
-              shareBtn.textContent = "安慰已复制";
-              setTimeout(function () { shareBtn.textContent = "分享这份安慰"; }, 1300);
+              shareBtn.textContent = "锅报已复制";
+              setTimeout(function () { shareBtn.textContent = "复制这份锅报"; }, 1300);
             }).catch(function () {
               shareBtn.textContent = "长按截图分享";
-              setTimeout(function () { shareBtn.textContent = "分享这份安慰"; }, 1300);
+              setTimeout(function () { shareBtn.textContent = "复制这份锅报"; }, 1300);
             });
           } else {
             shareBtn.textContent = "长按截图分享";
-            setTimeout(function () { shareBtn.textContent = "分享这份安慰"; }, 1300);
+            setTimeout(function () { shareBtn.textContent = "复制这份锅报"; }, 1300);
           }
         }
 
-        function updateParticles(dt, now) {
-          const fire = FIRE_LEVELS[state.fireIndex];
-          if (state.phase === "cooking" || state.phase === "ready") {
-            const pot = state.layout.pot;
-            const bubbleChance = 0.014 * fire.bubble * dt;
-            if (Math.random() < bubbleChance) {
-              state.bubbles.push({
-                x: pot.x + pot.w * (0.18 + Math.random() * 0.64),
-                y: pot.y + pot.h * (0.34 + Math.random() * 0.26),
-                vy: -0.18 - Math.random() * 0.32 * fire.bubble,
-                age: 0,
-                life: 900 + Math.random() * 700,
-                size: 4 + Math.random() * 9
-              });
-            }
-            if (Math.random() < 0.008 * fire.bubble * dt) {
+        function update(dt, now) {
+          const pot = state.layout.pot;
+          if (state.phase === "choose" || state.phase === "replay") {
+            const heat = state.phase === "replay" ? 1.8 : 1;
+            if (Math.random() < 0.012 * dt * heat) {
               state.steam.push({
-                x: pot.x + pot.w * (0.24 + Math.random() * 0.52),
-                y: pot.y + pot.h * 0.08,
-                vx: (Math.random() - 0.5) * 0.55,
-                vy: -0.75 - Math.random() * 0.85 * fire.bubble,
+                x: pot.x + pot.w * (0.2 + Math.random() * 0.6),
+                y: pot.y + pot.h * 0.1,
+                vx: (Math.random() - 0.5) * 0.7,
+                vy: -0.8 - Math.random() * 1.2,
                 age: 0,
-                life: 1100 + Math.random() * 900,
+                life: 950 + Math.random() * 850,
                 size: 8 + Math.random() * 16,
-                color: fire.steam
+                color: "#fff0d2"
+              });
+            }
+            if (Math.random() < 0.01 * dt * heat) {
+              state.soupBits.push({
+                x: pot.x + pot.w * (0.18 + Math.random() * 0.64),
+                y: pot.y + pot.h * (0.38 + Math.random() * 0.2),
+                age: 0,
+                life: 820 + Math.random() * 640,
+                size: 4 + Math.random() * 8,
+                color: Math.random() > 0.5 ? "#ffd05a" : "#ff6749"
               });
             }
           }
 
-          state.particles = state.particles.filter(function (p) {
-            p.age += dt;
-            p.x += p.vx * dt * 0.06;
-            p.y += p.vy * dt * 0.06;
-            p.vy += 0.012 * dt;
-            return p.age < p.life;
-          });
-          state.bubbles = state.bubbles.filter(function (p) {
-            p.age += dt;
-            p.y += p.vy * dt * 0.08;
-            return p.age < p.life;
-          });
-          state.steam = state.steam.filter(function (p) {
-            p.age += dt;
-            p.x += p.vx * dt * 0.08;
-            p.y += p.vy * dt * 0.08;
-            return p.age < p.life;
-          });
+          if (state.phase === "replay") {
+            const elapsed = now - state.replayStart;
+            const index = Math.min(4, Math.floor(elapsed / 950));
+            if (index !== state.revealIndex) {
+              state.revealIndex = index;
+              state.shakeUntil = now + 220;
+              const color = index < 4 ? state.scenario.records[index].color : state.spoon.color;
+              spawn(pot.x + pot.w / 2, pot.y + pot.h * 0.42, color, 28, 4);
+            }
+            if (elapsed > 5400) finishReplay();
+          }
 
-          if (state.phase === "cooking" && now - state.cookStart >= COOK_TIME) finishCooking(now);
-          if (state.phase === "ready" && state.pointerDown && state.holdStart && now - state.holdStart >= HOLD_TIME) openLid();
+          state.particles = state.particles.filter(function (item) {
+            item.age += dt;
+            item.x += item.vx * dt * 0.06;
+            item.y += item.vy * dt * 0.06;
+            item.vy += 0.012 * dt;
+            return item.age < item.life;
+          });
+          state.steam = state.steam.filter(function (item) {
+            item.age += dt;
+            item.x += item.vx * dt * 0.08;
+            item.y += item.vy * dt * 0.08;
+            return item.age < item.life;
+          });
+          state.soupBits = state.soupBits.filter(function (item) {
+            item.age += dt;
+            item.y -= dt * 0.015;
+            return item.age < item.life;
+          });
         }
 
-        function drawBg(now) {
+        function drawBackground(now) {
           const w = state.w;
           const h = state.h;
-          ctx.fillStyle = "#21100d";
+          ctx.fillStyle = "#1a0907";
           ctx.fillRect(0, 0, w, h);
           const g = ctx.createLinearGradient(0, 0, 0, h);
-          g.addColorStop(0, "#3a1812");
-          g.addColorStop(0.48, "#27100d");
-          g.addColorStop(1, "#150807");
+          g.addColorStop(0, "#3c140f");
+          g.addColorStop(0.48, "#250b08");
+          g.addColorStop(1, "#100403");
           ctx.fillStyle = g;
           ctx.fillRect(0, 0, w, h);
           for (let y = 0; y < h; y += 8) {
             for (let x = (y / 8) % 2 ? 4 : 0; x < w; x += 8) {
-              ctx.fillStyle = "rgba(255,255,255,0.018)";
-              ctx.fillRect(x, y, 2, 2);
+              rect(x, y, 2, 2, "rgba(255,255,255,0.018)");
             }
           }
-          const glow = ctx.createRadialGradient(w / 2, h * 0.46, 20, w / 2, h * 0.46, w * 0.64);
-          glow.addColorStop(0, "rgba(255,139,93,0.25)");
-          glow.addColorStop(1, "rgba(255,139,93,0)");
+          const glow = ctx.createRadialGradient(w / 2, h * 0.46, 30, w / 2, h * 0.46, w * 0.7);
+          glow.addColorStop(0, "rgba(255,82,48,.28)");
+          glow.addColorStop(1, "rgba(255,82,48,0)");
           ctx.fillStyle = glow;
           ctx.fillRect(0, 0, w, h);
         }
 
         function drawHeader() {
           const y = state.layout.titleY;
-          text("把说不出口的东西放进锅里", state.w / 2, y, 13, "#ffd36a", "center", 900);
-          text("情绪温泉锅", state.w / 2, y + 22, Math.min(38, state.w * 0.096), "#ffeecf", "center", 900);
-          wrapText(state.message, state.w / 2, y + 66, state.w - 54, 14, 19, "rgba(255,238,207,0.86)", "center");
+          text("前面四个人已经下手", state.w / 2, y, 13, "#ffd05a", "center", 900);
+          text("一人一勺", state.w / 2, y + 22, Math.min(50, state.w * 0.14), "#fff0d2", "center", 900);
+          text("最后一勺", state.w / 2, y + 78, 23, "#ff8a60", "center", 900);
         }
 
-        function drawPixelIcon(item, x, y, size, active) {
-          rect(x, y, size, size, active ? "#ffe3a3" : "#4a241a");
-          rect(x + 4, y + 4, size - 8, size - 8, "#2c1510");
-          rect(x + 8, y + 8, size - 16, size - 16, item.color);
-          rect(x + 14, y + 16, 8, 8, "#2a1410");
-          rect(x + size - 22, y + 16, 8, 8, "#2a1410");
-          if (item.id === "tired") {
-            rect(x + 13, y + 18, 11, 4, "#2a1410");
-            rect(x + size - 24, y + 18, 11, 4, "#2a1410");
-          }
-          rect(x + size * 0.34, y + size * 0.62, size * 0.32, 5, "#2a1410");
-          text(item.label, x + size / 2, y + size + 7, 11, "#ffeecf", "center", 900);
-        }
-
-        function drawEmotionDock() {
-          if (state.phase !== "choose") return;
-          const boxes = emotionBoxes();
-          text("拖一种情绪下锅", state.w / 2, state.layout.emotionY - 28, 13, "#ffd36a", "center", 900);
-          boxes.forEach(function (box) {
-            const dragging = state.drag && state.drag.item.id === box.item.id;
-            drawPixelIcon(box.item, box.x, box.y, box.w, dragging);
-          });
-        }
-
-        function drawFire(now) {
-          const fire = state.layout.fire;
-          const level = FIRE_LEVELS[state.fireIndex];
-          rect(fire.x, fire.y + 44, fire.w, 18, "#5a321f");
-          rect(fire.x + 4, fire.y + 38, fire.w - 8, 14, "#7d4529");
-          for (let i = 0; i < 3; i += 1) {
-            const fx = fire.x + 16 + i * 15;
-            const fy = fire.y + 34 - Math.sin(now * 0.006 + i) * 4 * (state.fireIndex + 1);
-            rect(fx, fy, 12, 24, state.fireIndex === 0 ? "#ffb85d" : state.fireIndex === 1 ? "#ff7a45" : "#ff4d35");
-            rect(fx + 3, fy + 7, 6, 14, "#ffe07d");
-          }
-          rect(fire.x + 9, fire.y + 58, 48, 7, "#3a2018");
-          text(level.label, fire.x + fire.w / 2, fire.y + 68, 12, "#ffd36a", "center", 900);
-          text("点柴火调火", fire.x + fire.w / 2, fire.y + 84, 10, "rgba(255,238,207,0.62)", "center", 900);
+        function drawTarget() {
+          if (state.phase === "result") return;
+          const box = state.layout.target;
+          rect(box.x, box.y, box.w, box.h, "rgba(36,13,9,.72)");
+          rect(box.x + 5, box.y + 5, box.w - 10, box.h - 10, "rgba(255,240,210,.07)");
+          text("锅主目标", box.x + 14, box.y + 12, 12, "#ffd05a", "left", 900);
+          wrapText(state.scenario.target, box.x + 14, box.y + 34, box.w - 28, 18, 22, "#fff0d2", "left");
         }
 
         function soupColor() {
-          if (state.selected) {
-            const fireTint = state.fireIndex === 0 ? "#ffd6a1" : state.fireIndex === 1 ? state.selected.soup : "#ff704f";
-            return fireTint;
-          }
-          return "#d8794f";
+          if (state.phase === "result") return state.result && state.result.survived ? "#d98f5c" : "#6d2d23";
+          if (state.phase === "replay" && state.spoon) return state.spoon.soup;
+          return state.scenario.before < 40 ? "#d65a45" : "#df7d4d";
         }
 
         function drawPot(now) {
           const pot = state.layout.pot;
           const lid = state.layout.lid;
-          const wobble = state.phase === "ready" ? Math.sin(now * 0.045) * 4 : 0;
-          const cookPulse = state.phase === "cooking" ? Math.sin(now * 0.006) * 2 : 0;
+          const trouble = state.phase === "replay" ? 1 : 0;
+          const wobble = (state.scenario.before < 40 || state.phase === "replay")
+            ? Math.sin(now * 0.035) * (2.5 + trouble * 2.5)
+            : Math.sin(now * 0.012) * 1.2;
+          rect(pot.x - 28, pot.y + pot.h * 0.42, 40, 40, "#602815");
+          rect(pot.x + pot.w - 12, pot.y + pot.h * 0.42, 40, 40, "#602815");
+          rect(pot.x, pot.y + pot.h * 0.18, pot.w, pot.h * 0.62, "#9b4d2c");
+          rect(pot.x + 10, pot.y + pot.h * 0.24, pot.w - 20, pot.h * 0.5, "#682d1d");
+          rect(pot.x + 20, pot.y + pot.h * 0.3, pot.w - 40, pot.h * 0.34, soupColor());
+          rect(pot.x + 24, pot.y + pot.h * 0.33, pot.w - 48, 9, "rgba(255,240,210,.34)");
+          rect(pot.x + 18, pot.y + pot.h * 0.72, pot.w - 36, 20, "#3a160f");
 
-          rect(pot.x - 18, pot.y + pot.h * 0.38, 28, 34, "#5c2f20");
-          rect(pot.x + pot.w - 10, pot.y + pot.h * 0.38, 28, 34, "#5c2f20");
-          rect(pot.x, pot.y + pot.h * 0.18, pot.w, pot.h * 0.62, "#9b5b37");
-          rect(pot.x + 8, pot.y + pot.h * 0.24, pot.w - 16, pot.h * 0.5, "#6d3b27");
-          rect(pot.x + 16, pot.y + pot.h * 0.3, pot.w - 32, pot.h * 0.32, soupColor());
-          rect(pot.x + 20, pot.y + pot.h * 0.33, pot.w - 40, 8, "rgba(255,238,207,0.32)");
-          rect(pot.x + 10, pot.y + pot.h * 0.72, pot.w - 20, 18, "#4a2419");
-          rect(pot.x + 34, pot.y + pot.h * 0.8, pot.w - 68, 12, "#301712");
-
-          state.bubbles.forEach(function (b) {
-            const alpha = 1 - b.age / b.life;
-            rect(b.x, b.y, b.size, b.size, "rgba(255,255,255," + (0.24 * alpha) + ")");
-            rect(b.x + 2, b.y + 2, Math.max(2, b.size - 4), Math.max(2, b.size - 4), "rgba(255,238,207," + (0.28 * alpha) + ")");
+          state.soupBits.forEach(function (item) {
+            const alpha = 1 - item.age / item.life;
+            ctx.globalAlpha = alpha;
+            rect(item.x, item.y, item.size, item.size, item.color);
+            ctx.globalAlpha = 1;
           });
 
-          if (state.selected) {
-            const bob = Math.sin(now * 0.004) * 4;
-            drawMiniThing(state.selected, pot.x + pot.w * 0.42, pot.y + pot.h * 0.42 + bob, 22);
-          }
-
           if (state.phase !== "result") {
-            rect(lid.x, lid.y + wobble - cookPulse, lid.w, lid.h, "#8b4d2d");
-            rect(lid.x + 8, lid.y + 5 + wobble - cookPulse, lid.w - 16, lid.h - 8, "#b66b3e");
-            rect(lid.x + lid.w * 0.42, lid.y - 10 + wobble - cookPulse, lid.w * 0.16, 12, "#61331f");
+            rect(lid.x, lid.y + wobble, lid.w, lid.h, "#8a4327");
+            rect(lid.x + 8, lid.y + 5 + wobble, lid.w - 16, lid.h - 9, "#bd6a3a");
+            rect(lid.x + lid.w * 0.42, lid.y - 11 + wobble, lid.w * 0.16, 13, "#5b2818");
           } else {
-            rect(lid.x + lid.w * 0.72, lid.y - 36, lid.w * 0.58, lid.h, "#8b4d2d");
-            rect(lid.x + lid.w * 0.77, lid.y - 31, lid.w * 0.46, lid.h - 8, "#b66b3e");
+            rect(lid.x + lid.w * 0.7, lid.y - 38, lid.w * 0.62, lid.h, "#8a4327");
+            rect(lid.x + lid.w * 0.76, lid.y - 33, lid.w * 0.48, lid.h - 9, "#bd6a3a");
           }
 
-          if (state.phase === "cooking") {
-            const p = Math.min(1, (performance.now() - state.cookStart) / COOK_TIME);
-            rect(pot.x + 16, pot.y + pot.h + 12, pot.w - 32, 10, "#3d2118");
-            rect(pot.x + 16, pot.y + pot.h + 12, (pot.w - 32) * p, 10, "#ffd36a");
-            text("煮锅中 " + Math.ceil((COOK_TIME - (performance.now() - state.cookStart)) / 1000) + "s", pot.x + pot.w / 2, pot.y + pot.h + 28, 12, "#ffeecf", "center", 900);
-          }
-
-          if (state.phase === "ready") {
-            const hold = state.holdStart ? Math.min(1, (performance.now() - state.holdStart) / HOLD_TIME) : 0;
-            rect(pot.x + 24, pot.y + pot.h + 13, pot.w - 48, 12, "#3d2118");
-            rect(pot.x + 24, pot.y + pot.h + 13, (pot.w - 48) * hold, 12, "#ffd36a");
-            text("长按锅盖开锅", pot.x + pot.w / 2, pot.y + pot.h + 31, 13, "#ffd36a", "center", 900);
-          }
+          drawGauge(pot.x + 26, pot.y + pot.h + 16, pot.w - 52, state.phase === "replay" || state.phase === "result" ? state.finalIntegrity : state.scenario.before);
         }
 
-        function drawMiniThing(item, x, y, size) {
-          rect(x, y, size, size, item.color);
-          rect(x + 5, y + 7, 4, 4, "#23110d");
-          rect(x + size - 9, y + 7, 4, 4, "#23110d");
-          rect(x + 6, y + size - 8, size - 12, 4, "#23110d");
+        function drawGauge(x, y, w, value) {
+          rect(x, y, w, 12, "#35140e");
+          rect(x, y, w * clamp(value, 0, 100) / 100, 12, value > 45 ? "#ffd05a" : value > 20 ? "#ff7b45" : "#ff4636");
+          text("承受值 " + value, x + w / 2, y + 18, 12, "rgba(255,240,210,.78)", "center", 900);
         }
 
         function drawChef(now) {
-          const chef = state.layout.chef;
-          const s = chef.scale;
-          const wave = state.phase === "cooking" ? Math.sin(now * 0.012) * 5 : 0;
-          const tiptoe = state.phase === "ready" || state.phase === "result" ? -8 : 0;
-          const x = chef.x;
-          const y = chef.y + tiptoe;
-          rect(x, y + 18 * s, 24 * s, 26 * s, "#f2c49b");
-          rect(x + 4 * s, y + 12 * s, 16 * s, 10 * s, "#ffe8cf");
-          rect(x + 7 * s, y + 25 * s, 4 * s, 4 * s, "#2a1410");
-          rect(x + 16 * s, y + 25 * s, 4 * s, 4 * s, "#2a1410");
-          rect(x + 8 * s, y + 35 * s, 10 * s, 4 * s, "#8d392e");
-          rect(x - 2 * s, y + 44 * s, 28 * s, 30 * s, "#7fc0ad");
-          rect(x + 4 * s, y + 50 * s, 16 * s, 24 * s, "#fff2d6");
-          rect(x - 10 * s, y + (48 + wave) * s, 10 * s, 8 * s, "#f2c49b");
-          rect(x + 24 * s, y + 48 * s, 10 * s, 8 * s, "#f2c49b");
-          rect(x + 3 * s, y + 74 * s, 8 * s, 12 * s, "#3d2118");
-          rect(x + 15 * s, y + 74 * s, 8 * s, 12 * s, "#3d2118");
+          const c = state.layout.chef;
+          const s = c.scale;
+          const lean = state.phase === "replay" ? Math.sin(now * 0.04) * 5 : 0;
+          const x = c.x + lean;
+          const y = c.y + (state.phase === "result" ? -8 : 0);
+          rect(x, y + 18 * s, 24 * s, 25 * s, "#f1c39b");
+          rect(x + 4 * s, y + 11 * s, 16 * s, 10 * s, "#fff0d2");
+          rect(x + 7 * s, y + 25 * s, 4 * s, 4 * s, "#2b100b");
+          rect(x + 16 * s, y + 25 * s, 4 * s, 4 * s, "#2b100b");
+          rect(x + 8 * s, y + 35 * s, 10 * s, 4 * s, state.phase === "replay" ? "#ff5a37" : "#7b3025");
+          rect(x - 2 * s, y + 44 * s, 28 * s, 30 * s, "#7ac3ad");
+          rect(x + 4 * s, y + 50 * s, 16 * s, 24 * s, "#fff0d2");
+          rect(x - 11 * s, y + 48 * s, 11 * s, 8 * s, "#f1c39b");
+          rect(x + 24 * s, y + (state.phase === "replay" ? 41 : 48) * s, 11 * s, 8 * s, "#f1c39b");
+          rect(x + 3 * s, y + 74 * s, 8 * s, 12 * s, "#35140e");
+          rect(x + 15 * s, y + 74 * s, 8 * s, 12 * s, "#35140e");
         }
 
-        function drawParticles() {
-          state.steam.forEach(function (p) {
-            const alpha = Math.max(0, 1 - p.age / p.life);
-            ctx.fillStyle = p.color.replace(")", "," + (0.22 * alpha) + ")").replace("#", "");
-            ctx.globalAlpha = 0.18 * alpha;
-            rect(p.x, p.y, p.size, p.size, p.color);
-            ctx.globalAlpha = 1;
-          });
-
-          state.particles.forEach(function (p) {
-            const alpha = 1 - p.age / p.life;
-            ctx.globalAlpha = alpha;
-            rect(p.x, p.y, p.size, p.size, p.color);
-            ctx.globalAlpha = 1;
+        function drawRecordStrip() {
+          if (state.phase === "result") return;
+          const top = state.layout.pot.y - 102;
+          const cardW = (state.w - 46) / 4;
+          state.scenario.records.forEach(function (record, index) {
+            const x = 17 + index * (cardW + 4);
+            const active = state.phase === "replay" && state.revealIndex >= index;
+            rect(x, top, cardW, 76, active ? "rgba(255,208,90,.2)" : "rgba(34,12,8,.72)");
+            rect(x + 5, top + 5, cardW - 10, 66, active ? record.color : "rgba(255,240,210,.08)");
+            text("第" + (index + 1) + "勺", x + cardW / 2, top + 10, 11, active ? "#2b100b" : "#ffd05a", "center", 900);
+            wrapText(active ? record.name : "雾里", x + cardW / 2, top + 34, cardW - 12, 13, 16, active ? "#2b100b" : "rgba(255,240,210,.66)", "center");
           });
         }
 
-        function drawFoodIcon(food, x, y, size) {
-          rect(x, y, size, size, "#3a2018");
-          if (food.icon === "cake") {
-            rect(x + 10, y + 22, size - 20, 22, food.color);
-            rect(x + 14, y + 16, size - 28, 8, "#fff2d6");
-            rect(x + 24, y + 8, 7, 10, "#ff7a4f");
-          } else if (food.icon === "bread") {
-            rect(x + 11, y + 18, size - 22, 28, food.color);
-            rect(x + 16, y + 13, size - 32, 12, "#edb46d");
-          } else if (food.icon === "tea") {
-            rect(x + 14, y + 16, size - 28, 30, food.color);
-            rect(x + 20, y + 10, size - 40, 8, "#fff2d6");
-            rect(x + size - 17, y + 24, 9, 12, "#8d5c3d");
-          } else if (food.icon === "porridge") {
-            rect(x + 10, y + 22, size - 20, 18, "#c97d58");
-            rect(x + 14, y + 16, size - 28, 20, food.color);
-          } else if (food.icon === "oden") {
-            rect(x + 16, y + 14, 8, 32, "#b87945");
-            rect(x + 27, y + 12, 14, 14, "#f6d27c");
-            rect(x + 25, y + 29, 18, 12, "#e8a85a");
-          } else {
-            rect(x + 10, y + 20, size - 20, 20, "#b5663b");
-            rect(x + 14, y + 15, size - 28, 22, food.color);
-            rect(x + 22, y + 20, 12, 8, "#fff0c9");
-          }
+        function drawReplayText() {
+          if (state.phase !== "replay") return;
+          const idx = state.revealIndex;
+          let line = "";
+          if (idx >= 0 && idx < 4) line = state.scenario.records[idx].open;
+          if (idx >= 4) line = "第5勺：你放入了 " + (state.spoon ? state.spoon.name : "最后一勺") + "。";
+          if (idx >= 4 && state.blind) line = "第5勺：" + state.blind.line;
+          const y = state.layout.pot.y + state.layout.pot.h + 54;
+          rect(22, y, state.w - 44, 64, "rgba(36,13,9,.78)");
+          wrapText(line, state.w / 2, y + 15, state.w - 70, 17, 23, "#fff0d2", "center");
         }
 
-        function drawResultPanel() {
-          if (state.phase !== "result" || !state.result) return;
-          const r = state.layout.result;
-          rect(r.x, r.y, r.w, r.h, "rgba(37,18,14,0.94)");
-          rect(r.x + 5, r.y + 5, r.w - 10, r.h - 10, "rgba(255,238,207,0.08)");
-          text("你的情绪被煮成了", state.w / 2, r.y + 22, 13, "#ffd36a", "center", 900);
-          wrapText(state.result.title, state.w / 2, r.y + 48, r.w - 44, 28, 34, "#ffeecf", "center");
-          drawFoodIcon(state.result.food, state.w / 2 - 42, r.y + 118, 84);
-          text(state.result.food.name, state.w / 2, r.y + 210, 14, "#ffd36a", "center", 900);
-          text("口感：" + state.result.taste, state.w / 2, r.y + 238, 14, "#ffcf9c", "center", 900);
-          let y = wrapText(state.result.line, r.x + 26, r.y + 284, r.w - 52, 18, 28, "#ffeecf", "left");
-          y = wrapText(state.result.mixed, r.x + 26, y + 12, r.w - 52, 16, 24, "rgba(255,238,207,0.82)", "left");
-          text("已煮过 " + state.stats.cooked + " 锅  ·  完美煮锅 " + state.stats.perfect + " 次", state.w / 2, Math.min(r.y + r.h - 54, y + 22), 12, "rgba(255,238,207,0.66)", "center", 900);
+        function drawSpoonIcon(spoon, x, y, size, active) {
+          rect(x, y, size, size, active ? "#ffd05a" : "#3b160f");
+          rect(x + 6, y + 6, size - 12, size - 12, "#230c08");
+          rect(x + size * 0.45, y + 16, size * 0.12, size * 0.48, "#fff0d2");
+          rect(x + size * 0.33, y + 10, size * 0.36, size * 0.2, spoon.color);
+          rect(x + size * 0.39, y + 14, size * 0.22, size * 0.09, "rgba(255,255,255,.45)");
+          text(spoon.label, x + size / 2, y + size + 8, 11, "#fff0d2", "center", 900);
+          text(spoon.name, x + size / 2, y + size + 25, 10, "rgba(255,240,210,.62)", "center", 900);
+        }
+
+        function drawSpoonDock() {
+          if (state.phase !== "choose") return;
+          wrapText(state.message, state.w / 2, state.layout.dockY - 44, state.w - 48, 14, 19, "#ffd05a", "center");
+          spoonBoxes().forEach(function (box) {
+            drawSpoonIcon(box.item, box.x, box.y, box.w, state.drag && state.drag.item.id === box.item.id);
+          });
         }
 
         function drawDragging() {
           if (!state.drag) return;
-          drawPixelIcon(state.drag.item, state.drag.x - 31, state.drag.y - 31, 62, true);
+          drawSpoonIcon(state.drag.item, state.drag.x - 42, state.drag.y - 42, 84, true);
+        }
+
+        function drawParticles() {
+          state.steam.forEach(function (item) {
+            const alpha = 1 - item.age / item.life;
+            ctx.globalAlpha = 0.22 * alpha;
+            rect(item.x, item.y, item.size, item.size, item.color);
+            ctx.globalAlpha = 1;
+          });
+          state.particles.forEach(function (item) {
+            const alpha = 1 - item.age / item.life;
+            ctx.globalAlpha = alpha;
+            rect(item.x, item.y, item.size, item.size, item.color);
+            ctx.globalAlpha = 1;
+          });
+        }
+
+        function drawResult() {
+          if (state.phase !== "result" || !state.result) return;
+          const r = state.layout.result;
+          rect(r.x, r.y, r.w, r.h, "rgba(35,12,8,.94)");
+          rect(r.x + 6, r.y + 6, r.w - 12, r.h - 12, "rgba(255,240,210,.07)");
+          text("第5勺锅报", state.w / 2, r.y + 24, 14, "#ffd05a", "center", 900);
+          wrapText(state.result.role, state.w / 2, r.y + 54, r.w - 44, 36, 42, "#fff0d2", "center");
+          text(state.result.verdict, state.w / 2, r.y + 126, 16, state.result.survived ? "#ffd05a" : "#ff7b58", "center", 900);
+          drawResultPot(state.w / 2 - 58, r.y + 164, 116, state.result.survived);
+          wrapText(state.result.title, state.w / 2, r.y + 300, r.w - 52, 22, 30, "#fff0d2", "center");
+          wrapText(state.result.line, r.x + 30, r.y + 372, r.w - 60, 17, 27, "rgba(255,240,210,.84)", "left");
+          const spoonName = state.spoon ? state.spoon.name : "最后一勺";
+          text("你下的是：" + spoonName, state.w / 2, r.y + r.h - 112, 14, "#ffd05a", "center", 900);
+          text("已下过 " + state.stats.played + " 次 · 守住 " + state.stats.saved + " 次", state.w / 2, r.y + r.h - 82, 12, "rgba(255,240,210,.62)", "center", 900);
+        }
+
+        function drawResultPot(x, y, size, survived) {
+          rect(x, y + size * 0.25, size, size * 0.48, "#9b4d2c");
+          rect(x + 10, y + size * 0.32, size - 20, size * 0.25, survived ? "#db8a55" : "#6d2d23");
+          rect(x + 14, y + size * 0.35, size - 28, 7, "rgba(255,240,210,.36)");
+          if (survived) {
+            rect(x + size * 0.28, y + size * 0.11, size * 0.44, size * 0.16, "#bd6a3a");
+            rect(x + size * 0.42, y + size * 0.01, size * 0.16, size * 0.12, "#5b2818");
+          } else {
+            rect(x + 20, y + size * 0.17, 12, 12, "#ff5a37");
+            rect(x + size - 36, y + size * 0.2, 16, 14, "#ff5a37");
+            rect(x + size * 0.46, y + size * 0.06, 8, 24, "#ff5a37");
+          }
         }
 
         function draw(now) {
-          const shake = now < state.shakeUntil ? Math.sin(now * 0.08) * 3 : 0;
+          const shake = now < state.shakeUntil ? Math.sin(now * 0.08) * 4 : 0;
           ctx.save();
           ctx.translate(shake, 0);
-          drawBg(now);
+          drawBackground(now);
           if (state.phase === "result") {
             drawParticles();
-            drawResultPanel();
+            drawResult();
             ctx.restore();
             return;
           }
           drawHeader();
-          drawFire(now);
-          drawChef(now);
+          drawTarget();
+          drawRecordStrip();
           drawPot(now);
+          drawChef(now);
           drawParticles();
-          drawEmotionDock();
+          drawReplayText();
+          drawSpoonDock();
           drawDragging();
-          drawResultPanel();
           ctx.restore();
         }
 
         function loop(now) {
           const dt = Math.min(42, now - (state.lastTime || now));
           state.lastTime = now;
-          updateParticles(dt, now);
+          update(dt, now);
           draw(now);
           requestAnimationFrame(loop);
         }
 
         function onPointerDown(event) {
-          const p = pointerPoint(event);
+          const point = pointerPoint(event);
           state.pointerDown = true;
-          state.pointerId = event.pointerId;
-          canvas.setPointerCapture(event.pointerId);
-
-          if (hit(p, state.layout.fire) && state.phase !== "result") {
-            state.fireIndex = (state.fireIndex + 1) % FIRE_LEVELS.length;
-            state.message = "火候：" + FIRE_LEVELS[state.fireIndex].label + "。";
-            spawnSplash(state.layout.fire.x + 36, state.layout.fire.y + 24, "#ffd36a", 8);
-            return;
-          }
-
+          try { canvas.setPointerCapture(event.pointerId); } catch (error) { return null; }
           if (state.phase === "choose") {
-            const box = emotionBoxes().find(function (itemBox) { return hit(p, itemBox); });
+            const box = spoonBoxes().find(function (item) { return hit(point, item); });
             if (box) {
-              state.drag = { item: box.item, x: p.x, y: p.y };
-              state.message = "拖到锅里，扑通一下放进去。";
-              spawnSplash(p.x, p.y, box.item.color, 6);
+              state.drag = { item: box.item, x: point.x, y: point.y };
+              state.message = "拖到锅中央，放下最后一勺。";
+              spawn(point.x, point.y, box.item.color, 8, 3);
             }
-          } else if (state.phase === "ready" && hit(p, state.layout.lid)) {
-            state.holdStart = performance.now();
           }
         }
 
         function onPointerMove(event) {
-          const p = pointerPoint(event);
+          const point = pointerPoint(event);
           if (state.drag) {
-            state.drag.x = p.x;
-            state.drag.y = p.y;
-            if (Math.random() < 0.22) spawnSplash(p.x, p.y, state.drag.item.color, 1);
+            state.drag.x = point.x;
+            state.drag.y = point.y;
+            if (Math.random() < 0.28) spawn(point.x, point.y, state.drag.item.color, 1, 2);
           }
         }
 
         function onPointerUp(event) {
-          const p = pointerPoint(event);
+          const point = pointerPoint(event);
           state.pointerDown = false;
-          state.pointerId = null;
-          state.holdStart = 0;
           if (state.drag) {
-            const pot = state.layout.pot;
-            const dropZone = { x: pot.x + 14, y: pot.y - 18, w: pot.w - 28, h: pot.h * 0.78 };
             const item = state.drag.item;
+            const pot = state.layout.pot;
+            const zone = { x: pot.x - 16, y: pot.y - 42, w: pot.w + 32, h: pot.h * 1.06 };
             state.drag = null;
-            if (hit(p, dropZone)) {
-              dropEmotion(item);
+            if (hit(point, zone)) {
+              dropSpoon(item);
             } else {
-              state.message = "差一点，把情绪拖进锅中央。";
+              state.message = "还没下进去，再拖到锅中央。";
             }
           }
-          try {
-            canvas.releasePointerCapture(event.pointerId);
-          } catch (error) {
-            return null;
-          }
+          try { canvas.releasePointerCapture(event.pointerId); } catch (error) { return null; }
         }
 
         function onCancel() {
           state.pointerDown = false;
           state.drag = null;
-          state.holdStart = 0;
         }
 
         window.addEventListener("resize", resize);
         window.addEventListener("orientationchange", resize);
-        window.addEventListener("error", function () {
-          fallback.style.display = "grid";
-        });
-        window.addEventListener("unhandledrejection", function () {
-          fallback.style.display = "grid";
-        });
+        window.addEventListener("error", function () { fallback.style.display = "grid"; });
+        window.addEventListener("unhandledrejection", function () { fallback.style.display = "grid"; });
         canvas.addEventListener("pointerdown", onPointerDown);
         canvas.addEventListener("pointermove", onPointerMove);
         canvas.addEventListener("pointerup", onPointerUp);
         canvas.addEventListener("pointercancel", onCancel);
-        shareBtn.addEventListener("click", copyShare);
+        shareBtn.addEventListener("click", copyReport);
         againBtn.addEventListener("click", reset);
 
         resize();
