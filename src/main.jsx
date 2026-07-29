@@ -5,7 +5,6 @@ import "./styles.css";
 const RELAY_TARGET = 5;
 const RELAY_PARAM = "pot";
 const PLAYER_KEY = "one_spoon_player";
-const PLAYED_KEY = "one_spoon_played_pots";
 
 const GOALS = [
   {
@@ -68,30 +67,12 @@ function getPlayerId() {
   try {
     let id = localStorage.getItem(PLAYER_KEY);
     if (!id) {
-      id = `p_${makeId()}_${Date.now().toString(36)}`;
+      id = `p_${makeId()}`;
       localStorage.setItem(PLAYER_KEY, id);
     }
     return id;
   } catch {
     return `p_${makeId()}`;
-  }
-}
-
-function playedPots() {
-  try {
-    return JSON.parse(localStorage.getItem(PLAYED_KEY)) || {};
-  } catch {
-    return {};
-  }
-}
-
-function markPlayed(seed) {
-  try {
-    const played = playedPots();
-    played[seed] = true;
-    localStorage.setItem(PLAYED_KEY, JSON.stringify(played));
-  } catch {
-    return null;
   }
 }
 
@@ -113,7 +94,8 @@ function encodePot(pot) {
       side: item.side,
       i: item.integrity,
       h: item.heat,
-      a: item.actor
+      a: item.actor,
+      p: item.actorId || ""
     }))
   });
 }
@@ -136,7 +118,8 @@ function decodePot(raw) {
             side: entry.side === "help" ? "help" : "mess",
             integrity: clamp(Number(entry.i) || food.integrity, -80, 30),
             heat: clamp(Number(entry.h) || food.heat, -30, 60),
-            actor: typeof entry.a === "string" ? entry.a : `共犯#${index + 1}`
+            actor: typeof entry.a === "string" ? entry.a : `共犯#${index + 1}`,
+            actorId: typeof entry.p === "string" ? entry.p : ""
           };
         })
         .filter(Boolean)
@@ -233,8 +216,9 @@ function App() {
   const [flash, setFlash] = useState(false);
   const summary = pot ? summarizePot(pot) : null;
   const goal = pot ? goalById(pot.goal) : goalById(selectedGoal);
-  const hasPlayed = pot ? Boolean(playedPots()[pot.seed]) : false;
-  const canAct = pot && !summary.ended && !hasPlayed && !justCreated;
+  const lastActorId = pot?.history.at(-1)?.actorId || "";
+  const isLastActor = Boolean(lastActorId && lastActorId === playerId);
+  const canAct = pot && !summary.ended && !isLastActor && !justCreated;
   const shareUrl = pot ? makeShareUrl(pot) : "";
 
   useEffect(() => {
@@ -263,12 +247,12 @@ function App() {
       ...food,
       id: makeId(),
       side,
-      actor: `共犯#${summary.count + 1}`
+      actor: `共犯#${summary.count + 1}`,
+      actorId: playerId
     };
     const nextPot = { ...pot, history: [...pot.history, nextEntry] };
     setImpact(nextEntry);
     setPot(nextPot);
-    markPlayed(pot.seed, playerId);
     window.history.replaceState(null, "", `?${RELAY_PARAM}=${encodeURIComponent(encodePot(nextPot))}`);
     if (nextEntry.integrity <= -60 || summarizePot(nextPot).integrity <= 0) {
       setFlash(true);
@@ -373,7 +357,7 @@ function App() {
           <Pressure summary={summary} />
           <Hotpot mood={potMood(summary)} history={pot.history} impact={impact} />
           <div className="pot-bubble" role="status">
-            {summary.ended ? endLine(goal, summary) : justCreated ? "锅已经开好，把目标传给第1位共犯。" : canAct ? "轮到你了：帮一把，还是添点乱？" : "你已经接过这一锅，把它传给下一位。"}
+            {summary.ended ? endLine(goal, summary) : justCreated ? "锅已经开好，把目标传给第1位共犯。" : canAct ? "轮到你了：帮一把，还是添点乱？" : "刚才是你接的，传给别人后你还能回来接下一轮。"}
           </div>
         </section>
       </section>
