@@ -228,6 +228,7 @@ function App() {
   const [justCreated, setJustCreated] = useState(false);
   const [playerId] = useState(getPlayerId);
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
   const [impact, setImpact] = useState(null);
   const [flash, setFlash] = useState(false);
   const summary = pot ? summarizePot(pot) : null;
@@ -276,27 +277,50 @@ function App() {
     setTimeout(() => setImpact(null), 1100);
   };
 
-  const share = async () => {
-    setCopied(true);
-    const text = summary?.ended
-      ? `这口锅出结局了：${goal.title}。`
-      : `这口锅传到第 ${summary.count} 勺了，轮到你选帮还是添乱。`;
+  const copyTextToClipboard = async (value) => {
     try {
-      if (navigator.share) {
-        await navigator.share({ title: "一人一勺", text, url: shareUrl });
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(value);
+        return true;
       }
     } catch {
-      await navigator.clipboard?.writeText(shareUrl);
+      // Continue to the DOM copy fallback.
     }
-    setTimeout(() => setCopied(false), 1600);
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.left = "-9999px";
+      textarea.style.top = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const ok = document.execCommand("copy");
+      textarea.remove();
+      return ok;
+    } catch {
+      return false;
+    }
+  };
+
+  const share = async () => {
+    setCopyFailed(false);
+    setCopied(false);
+    const ok = await copyTextToClipboard(shareUrl);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } else {
+      setCopyFailed(true);
+    }
   };
 
   const reset = () => {
     setPot(null);
     setJustCreated(false);
     setCopied(false);
+    setCopyFailed(false);
     setImpact(null);
     window.history.replaceState(null, "", window.location.pathname);
   };
@@ -360,8 +384,9 @@ function App() {
             <>
               <button className="draw-button" onClick={share}>
                 <span className="spoon">🥄</span>
-                <span>{copied ? "链接已备好" : "传给第1位"}</span>
+                <span>{copied ? "接力链接已复制" : "复制链接给第1位"}</span>
               </button>
+              {copyFailed && <CopyFallback url={shareUrl} />}
               <button className="ghost-action creator-skip" onClick={() => setJustCreated(false)}>我先接第一勺</button>
             </>
           ) : canAct ? (
@@ -376,16 +401,19 @@ function App() {
               </button>
             </>
           ) : (
-            <button className="draw-button" onClick={share}>
-              <span className="spoon">🥄</span>
-              <span>{copied ? "链接已备好" : "传给下一位"}</span>
-            </button>
+            <>
+              <button className="draw-button" onClick={share}>
+                <span className="spoon">🥄</span>
+                <span>{copied ? "接力链接已复制" : "复制链接给下一位"}</span>
+              </button>
+              {copyFailed && <CopyFallback url={shareUrl} />}
+            </>
           )}
         </div>
       )}
 
       {summary.ended && (
-        <EndReport pot={pot} goal={goal} summary={summary} copied={copied} share={share} reset={reset} />
+        <EndReport pot={pot} goal={goal} summary={summary} copied={copied} copyFailed={copyFailed} shareUrl={shareUrl} share={share} reset={reset} />
       )}
     </main>
   );
@@ -479,7 +507,16 @@ function Timeline({ pot }) {
   );
 }
 
-function EndReport({ pot, goal, summary, copied, share, reset }) {
+function CopyFallback({ url }) {
+  return (
+    <div className="copy-fallback">
+      <span>复制失败，请长按下面链接复制</span>
+      <textarea readOnly value={url} />
+    </div>
+  );
+}
+
+function EndReport({ pot, goal, summary, copied, copyFailed, shareUrl, share, reset }) {
   const success = goal.id === "free" || summary.complete;
   const crucial = summary.crucial;
   const last = pot.history.at(-1);
@@ -515,13 +552,14 @@ function EndReport({ pot, goal, summary, copied, share, reset }) {
         <div className="poster-actions">
           <button className="primary-action" onClick={share}>
             <span aria-hidden="true">↗</span>
-            {copied ? "链接已备好" : "传阅结局"}
+            {copied ? "结局链接已复制" : "复制结局链接"}
           </button>
           <button className="ghost-action" onClick={reset}>
             <span aria-hidden="true">↻</span>
             再开一锅
           </button>
         </div>
+        {copyFailed && <CopyFallback url={shareUrl} />}
         <div className="share-line">
           <span aria-hidden="true">⌁</span>
           <span>锅是载体，目标才是赌注。</span>

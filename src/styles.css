@@ -1072,6 +1072,32 @@ h1 {
   border-color: rgba(255, 245, 230, 0.22);
 }
 
+.copy-fallback {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid rgba(255, 201, 77, 0.34);
+  border-radius: 8px;
+  color: rgba(255, 245, 230, 0.86);
+  background: rgba(26, 10, 8, 0.78);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.copy-fallback textarea {
+  width: 100%;
+  min-height: 58px;
+  resize: none;
+  border: 1px solid rgba(255, 245, 230, 0.22);
+  border-radius: 6px;
+  padding: 8px;
+  color: #3d160f;
+  background: #fff4d5;
+  font: inherit;
+  font-size: 11px;
+}
+
 .side-btn {
   display: grid;
   place-items: center;
